@@ -1,11 +1,15 @@
-package ru. fixbyte;
+package ru.fixbyte;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx. fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.stage. Stage;
+import javafx. scene.image.Image;
+import javafx. stage.Stage;
+import ru.fixbyte.model.CompanySettings;
+
+import java.io. InputStream;
 
 public class Main extends Application {
 
@@ -14,15 +18,31 @@ public class Main extends Application {
         try {
             System.out.println("Запуск приложения...");
 
-            // Предотвращаем неявное завершение приложения
+            // Загружаем настройки при старте
+            CompanySettings.loadSettings();
+
+            // ============ УСТАНАВЛИВАЕМ ИКОНКУ ПРИЛОЖЕНИЯ ============
+            try {
+                InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+                if (iconStream != null) {
+                    Image icon = new Image(iconStream);
+                    primaryStage.getIcons().add(icon);
+                    System.out.println("Иконка приложения загружена");
+                } else {
+                    System.out.println("Иконка не найдена:  /icon.png");
+                }
+            } catch (Exception e) {
+                System.err.println("Ошибка загрузки иконки: " + e.getMessage());
+            }
+            // ========================================================
+
             Platform.setImplicitExit(true);
 
-            // Загружаем FXML
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/main.fxml")
             );
 
-            System.out.println("FXML файл найден: " + (loader.getLocation() != null));
+            System.out.println("FXML файл найден:  " + (loader.getLocation() != null));
 
             Scene scene = new Scene(loader.load(), 800, 600);
 
@@ -30,22 +50,15 @@ public class Main extends Application {
             primaryStage.setScene(scene);
             primaryStage.setResizable(true);
 
-            // Обработчик закрытия окна
             primaryStage.setOnCloseRequest(event -> {
                 System.out.println("Закрытие приложения...");
                 Platform.exit();
                 System.exit(0);
             });
 
-            // Показываем окно
             primaryStage.show();
 
-            // Выводим информацию об окне
             System.out.println("Окно открыто!");
-            System.out.println("Размеры окна: " + primaryStage. getWidth() + "x" + primaryStage.getHeight());
-            System.out.println("Окно видимо: " + primaryStage.isShowing());
-
-            // Переводим окно на передний план
             primaryStage.toFront();
             primaryStage.requestFocus();
 
@@ -56,8 +69,8 @@ public class Main extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert. setTitle("Ошибка");
             alert.setHeaderText("Не удалось запустить приложение");
-            alert. setContentText(e.getMessage());
-            alert. showAndWait();
+            alert.setContentText(e. getMessage());
+            alert.showAndWait();
 
             Platform.exit();
         }
