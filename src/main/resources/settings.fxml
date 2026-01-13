@@ -59,7 +59,7 @@
             </GridPane>
 
             <Label text="Примечание:  Поместите файл логотипа в папку src/main/resources/ и укажите путь как /logo.png"
-                   style="-fx-text-fill:  #888888; -fx-font-size: 11px;" wrapText="true"/>
+                   style="-fx-text-fill:  #888888; -fx-font-size:  11px;" wrapText="true"/>
 
         </VBox>
     </center>

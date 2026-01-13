@@ -4,20 +4,46 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-<?import javafx.scene.text.Font?>
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ru.fixbyte.controller.MainController" prefHeight="600.0" prefWidth="800.0">
 
     <!-- Верхняя панель -->
     <top>
-        <VBox spacing="10" style="-fx-background-color:  #2c3e50; -fx-padding: 15;">
-            <Label text="Товарный чек" textFill="white">
-                <font>
-                    <Font name="Arial Bold" size="24"/>
-                </font>
-            </Label>
-        </VBox>
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color:  #2c3e50; -fx-padding: 15;">
+
+            <!-- Логотип -->
+            <VBox alignment="CENTER">
+                <ImageView fx:id="logoImageView" fitWidth="60" fitHeight="60" preserveRatio="true">
+                    <!-- Логотип будет загружен из кода, если файл существует -->
+                </ImageView>
+            </VBox>
+
+            <!-- Заголовок -->
+            <VBox alignment="CENTER_LEFT">
+                <Label text="Товарный чек" textFill="white">
+                    <font>
+                        <Font name="Arial Bold" size="24"/>
+                    </font>
+                </Label>
+                <Label fx:id="companyNameLabel" text="Название компании" textFill="#ecf0f1">
+                    <font>
+                        <Font name="Arial" size="12"/>
+                    </font>
+                </Label>
+            </VBox>
+
+            <!-- Заполнитель для выравнивания кнопки настроек вправо -->
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Кнопка настроек -->
+            <Button fx:id="settingsButton" text="⚙ Настройки" prefWidth="130"
+                    style="-fx-background-color:  #9b59b6; -fx-text-fill: white; -fx-font-size: 13;">
+            </Button>
+
+        </HBox>
     </top>
 
     <!-- Центральная часть -->
@@ -41,7 +67,7 @@
                 <TextField fx:id="quantityField" prefWidth="100" promptText="0. 00"/>
 
                 <Button fx:id="addButton" text="Добавить" prefWidth="100"
-                        style="-fx-background-color:  #27ae60; -fx-text-fill: white; -fx-font-size: 14;">
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14;">
                 </Button>
 
                 <Region HBox.hgrow="ALWAYS"/>
@@ -64,17 +90,13 @@
 
             <!-- Нижняя панель с итогом -->
             <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-background-color: #34495e; -fx-padding:  15; -fx-background-radius: 5;">
-                <Label fx:id="totalLabel" text="Итого:  0.00 руб." textFill="white">
+                <Label fx:id="totalLabel" text="Итого: 0.00 руб." textFill="white">
                     <font>
                         <Font name="Arial Bold" size="18"/>
                     </font>
                 </Label>
 
                 <Region HBox.hgrow="ALWAYS"/>
-                <!-- В секции с кнопками -->
-                <Button fx:id="settingsButton" text="⚙ Настройки"
-                        style="-fx-background-color:  #9b59b6; -fx-text-fill: white; -fx-font-size: 14;">
-                </Button>
 
                 <Button fx:id="clearButton" text="Очистить" prefWidth="120"
                         style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14;">
