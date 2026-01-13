@@ -1,13 +1,13 @@
 package ru.fixbyte;
 
 import javafx.application.Application;
-import javafx.application.Platform;
+import javafx. application.Platform;
 import javafx. fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx. scene.image.Image;
+import javafx.scene. control.Alert;
+import javafx.scene.image.Image;
 import javafx. stage.Stage;
-import ru.fixbyte.model.CompanySettings;
+import ru. fixbyte.model.CompanySettings;
 
 import java.io. InputStream;
 
@@ -21,34 +21,43 @@ public class Main extends Application {
             // Загружаем настройки при старте
             CompanySettings.loadSettings();
 
-            // ============ УСТАНАВЛИВАЕМ ИКОНКУ ПРИЛОЖЕНИЯ ============
-            try {
-                InputStream iconStream = getClass().getResourceAsStream("/logo.png");
-                if (iconStream != null) {
-                    Image icon = new Image(iconStream);
-                    primaryStage.getIcons().add(icon);
-                    System.out.println("Иконка приложения загружена");
-                } else {
-                    System.out.println("Иконка не найдена:  /icon.png");
-                }
-            } catch (Exception e) {
-                System.err.println("Ошибка загрузки иконки: " + e.getMessage());
-            }
-            // ========================================================
-
             Platform.setImplicitExit(true);
 
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/main.fxml")
             );
 
-            System.out.println("FXML файл найден:  " + (loader.getLocation() != null));
+            System.out. println("FXML файл найден:  " + (loader.getLocation() != null));
 
-            Scene scene = new Scene(loader.load(), 800, 600);
+            // Применяем сохраненные размеры окна
+            int windowWidth = CompanySettings. getWindowWidth();
+            int windowHeight = CompanySettings.getWindowHeight();
+
+            Scene scene = new Scene(loader.load(), windowWidth, windowHeight);
 
             primaryStage.setTitle("Товарные чеки");
             primaryStage.setScene(scene);
             primaryStage.setResizable(true);
+
+            // Устанавливаем минимальные размеры
+            primaryStage.setMinWidth(600);
+            primaryStage.setMinHeight(400);
+
+            // ============ УСТАНОВКА ИКОНКИ ============
+            try {
+                InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+                if (iconStream != null) {
+                    Image icon = new Image(iconStream);
+                    primaryStage.getIcons().add(icon);
+                    System.out.println("Иконка приложения загружена успешно");
+                } else {
+                    System.out.println("Файл иконки не найден:   /icon.png");
+                }
+            } catch (Exception e) {
+                System.err.println("Ошибка загрузки иконки:  " + e.getMessage());
+                e.printStackTrace();
+            }
+            // ========================================
 
             primaryStage.setOnCloseRequest(event -> {
                 System.out.println("Закрытие приложения...");
@@ -59,6 +68,8 @@ public class Main extends Application {
             primaryStage.show();
 
             System.out.println("Окно открыто!");
+            System.out.println("Размеры окна: " + windowWidth + "x" + windowHeight);
+
             primaryStage.toFront();
             primaryStage.requestFocus();
 
@@ -69,10 +80,10 @@ public class Main extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert. setTitle("Ошибка");
             alert.setHeaderText("Не удалось запустить приложение");
-            alert.setContentText(e. getMessage());
+            alert.setContentText(e.getMessage());
             alert.showAndWait();
 
-            Platform.exit();
+            Platform. exit();
         }
     }
 

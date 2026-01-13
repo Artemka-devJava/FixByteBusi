@@ -2,7 +2,9 @@ open module ru.fixbyte {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.sql;
-
-    // Добавляем SQLite JDBC как автоматический модуль
     requires org.xerial.sqlitejdbc;
+
+    // Разрешаем нативный доступ
+    requires static org.slf4j;
+    requires static org.slf4j.simple;
 }
