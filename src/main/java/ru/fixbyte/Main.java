@@ -7,7 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene. control.Alert;
 import javafx.scene.image.Image;
 import javafx. stage.Stage;
-import ru. fixbyte.model.CompanySettings;
+import ru.fixbyte.model.CompanySettings;
 
 import java.io. InputStream;
 

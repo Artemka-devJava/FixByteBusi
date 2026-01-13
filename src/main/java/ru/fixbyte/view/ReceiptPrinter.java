@@ -12,7 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.shape.Line;
 import javafx.scene.paint.Color;
 import ru.fixbyte.model. ReceiptItem;
-import ru. fixbyte.model.CompanySettings;
+import ru.fixbyte.model.CompanySettings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
