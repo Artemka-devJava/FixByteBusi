@@ -6,5 +6,5 @@ open module ru.fixbyte {
 
     // Разрешаем нативный доступ
     requires static org.slf4j;
-    requires static org.slf4j.simple;
+
 }
