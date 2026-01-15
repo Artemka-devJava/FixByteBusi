@@ -96,6 +96,11 @@ public class MainController {
                 InputStream logoStream = getClass().getResourceAsStream(logoPath);
                 if (logoStream != null) {
                     Image logo = new Image(logoStream);
+                    // Например, ограничим размер до 96x96 (или любые ваши значения!)
+                    logoImageView.setFitWidth(96);
+                    logoImageView.setFitHeight(96);
+                    logoImageView.setPreserveRatio(true);      // сохранять пропорции!
+                    logoImageView.setSmooth(true);              // сглаживание
                     logoImageView.setImage(logo);
                     logoImageView.setVisible(true);
                     System.out.println("Логотип загружен");
@@ -336,7 +341,7 @@ public class MainController {
         alert.setContentText(
                 """
                 Программа автоматизации торговли FixByteBusi
-                Версия: 0.1
+                Версия: 0.2
     
                 Разработчик: Артём Т. (Artemka-devJava)
                 Email: artem@tarabakin.ru
