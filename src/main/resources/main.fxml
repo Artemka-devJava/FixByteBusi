@@ -97,7 +97,9 @@
                 </Label>
 
                 <Region HBox.hgrow="ALWAYS"/>
-
+                <Button fx:id="aboutButton" text="О программе" onAction="#onAbout"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14;">
+                </Button>
                 <Button fx:id="clearButton" text="Очистить" prefWidth="120"
                         style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14;">
                 </Button>

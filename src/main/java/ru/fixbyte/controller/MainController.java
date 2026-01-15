@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class MainController {
     @FXML private ComboBox<Product> productComboBox;
@@ -44,7 +45,7 @@ public class MainController {
     @FXML private TextArea addressField;
     private DatabaseManager dbManager;
     private ObservableList<ReceiptItem> receiptItems;
-
+    @FXML private Button aboutButton;
     @FXML
     public void initialize() {
         System.out.println("Инициализация MainController...");
@@ -240,6 +241,16 @@ public class MainController {
             Scene scene = new Scene(loader.load());
             Stage stage = new Stage();
             stage.setTitle("Управление товарами");
+
+            // --- ДОБАВЛЕНИЕ ИКОНКИ ---
+            java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+            if (iconStream != null) {
+                stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+            } else {
+                System.err.println("icon.png не найден для окна управления товарами!");
+            }
+            // --- КОНЕЦ ДОБАВЛЕНИЯ ИКОНКИ ---
+
             stage.setScene(scene);
             stage.showAndWait();
             loadProducts();
@@ -266,6 +277,16 @@ public class MainController {
             Scene scene = new Scene(loader.load());
             Stage stage = new Stage();
             stage.setTitle("Настройки");
+
+            // ------ ДОБАВЛЯЕМ ИКОНКУ ------
+            java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+            if (iconStream != null) {
+                stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+            } else {
+                System.err.println("logo.png не найден для окна настроек!");
+            }
+            // ------ КОНЕЦ ДОБАВЛЕНИЯ ИКОНКИ ------
+
             stage.setScene(scene);
             stage.showAndWait();
 
@@ -284,7 +305,19 @@ public class MainController {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Ошибка");
+        alert.setHeaderText(null);
         alert.setContentText(message);
+
+        // --- Изменяем иконку окна ---
+        Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+        java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+        if (iconStream != null) {
+            stage.getIcons().clear();
+            stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+        } else {
+            System.err.println("icon.png не найден для окна ошибки!");
+        }
+
         alert.showAndWait();
     }
 
@@ -294,5 +327,29 @@ public class MainController {
     private String truncate(String s, int maxLen) {
         if (s == null) return "";
         return s.length() > maxLen ? s.substring(0, maxLen - 1) + "…" : s;
+    }
+    @FXML
+    private void onAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("О программе");
+        alert.setHeaderText("FixByteBusi");
+        alert.setContentText(
+                """
+                Программа автоматизации торговли FixByteBusi
+                Версия: 0.1
+    
+                Разработчик: Артём Т. (Artemka-devJava)
+                Email: artem@tarabakin.ru
+    
+                © 2024 Artemka-devJava
+                Все права защищены.
+                """
+        );
+        // --------- смена иконки ---------
+        Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+        stage.getIcons().clear();
+        stage.getIcons().add(new javafx.scene.image.Image(Objects.requireNonNull(getClass().getResourceAsStream("/logo.png"))));
+        // --------- конец смены иконки ----
+        alert.showAndWait();
     }
 }
