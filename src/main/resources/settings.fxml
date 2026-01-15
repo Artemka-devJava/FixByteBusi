@@ -22,7 +22,6 @@
         <ScrollPane fitToWidth="true" style="-fx-background:  white;">
             <VBox spacing="15" style="-fx-padding: 20;">
 
-                <!-- Основная информация -->
                 <Label text="Основная информация" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
 
                 <GridPane hgap="10" vgap="15">
@@ -31,145 +30,68 @@
                         <ColumnConstraints minWidth="350" prefWidth="400"/>
                     </columnConstraints>
 
-                    <!-- Название компании -->
                     <Label text="Название компании:" GridPane.columnIndex="0" GridPane.rowIndex="0">
                         <font><Font size="13"/></font>
                     </Label>
                     <TextField fx:id="companyNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                    <!-- Адрес -->
                     <Label text="Адрес:" GridPane.columnIndex="0" GridPane.rowIndex="1">
                         <font><Font size="13"/></font>
                     </Label>
                     <TextArea fx:id="addressField" GridPane.columnIndex="1" GridPane.rowIndex="1"
                               prefRowCount="3" wrapText="true"/>
 
-                    <!-- Телефон -->
                     <Label text="Телефон:" GridPane.columnIndex="0" GridPane.rowIndex="2">
                         <font><Font size="13"/></font>
                     </Label>
                     <TextField fx:id="phoneField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                    <!-- ИНН -->
                     <Label text="ИНН:" GridPane.columnIndex="0" GridPane.rowIndex="3">
                         <font><Font size="13"/></font>
                     </Label>
-                    <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                        <TextField fx:id="innField"/>
-                        <CheckBox fx:id="showInnCheckBox" text="Показывать ИНН в чеках">
-                            <font><Font size="12"/></font>
-                        </CheckBox>
-                    </VBox>
+                    <TextField fx:id="innField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                    <!-- Путь к логотипу -->
                     <Label text="Путь к логотипу:" GridPane.columnIndex="0" GridPane.rowIndex="4">
                         <font><Font size="13"/></font>
                     </Label>
-                    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                        <TextField fx:id="logoPathField" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="browseLogoButton" text="Обзор..." prefWidth="80"/>
-                    </HBox>
-
+                    <TextField fx:id="logoPathField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
                 </GridPane>
 
-                <!-- Примечание -->
-                <Label text="Примечание:  Поместите файл логотипа в папку src/main/resources/ и укажите путь как /logo.png"
-                       style="-fx-text-fill: #888888; -fx-font-size: 11px;" wrapText="true"/>
-
-                <!-- Разделитель -->
                 <Separator/>
 
-                <!-- Настройки интерфейса -->
                 <Label text="Настройки интерфейса" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
 
-                <VBox spacing="10" style="-fx-padding: 10; -fx-background-color: #f0f0f0; -fx-background-radius: 5;">
-                    <Label text="Размер главного окна (в пикселях):" style="-fx-font-weight: bold; -fx-font-size:  13px;"/>
+                <HBox spacing="10">
+                    <Label text="Размер главного окна:" style="-fx-font-weight: bold;"/>
+                    <Label text="Ширина:"/>
+                    <TextField fx:id="windowWidthField" promptText="800" prefWidth="65"/>
+                    <Label text="Высота:"/>
+                    <TextField fx:id="windowHeightField" promptText="600" prefWidth="65"/>
+                    <Button text="Сброс" onAction="#onResetSize"/>
+                    <Button text="800×600" onAction="#onSet800x600"/>
+                    <Button text="1024×768" onAction="#onSet1024x768"/>
+                    <Button text="1280×720" onAction="#onSet1280x720"/>
+                    <Button text="1366×768" onAction="#onSet1366x768"/>
+                </HBox>
 
-                    <GridPane hgap="15" vgap="10">
-                        <columnConstraints>
-                            <ColumnConstraints minWidth="80" prefWidth="80"/>
-                            <ColumnConstraints minWidth="100" prefWidth="150"/>
-                            <ColumnConstraints minWidth="200" prefWidth="250"/>
-                        </columnConstraints>
-
-                        <!-- Ширина -->
-                        <Label text="Ширина:" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <font><Font size="12"/></font>
-                        </Label>
-                        <TextField fx:id="windowWidthField" promptText="800" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="100"/>
-                        <Label text="(от 600 до 1920 пикселей)" GridPane.columnIndex="2" GridPane.rowIndex="0"
-                               style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
-
-                        <!-- Высота -->
-                        <Label text="Высота:" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                            <font><Font size="12"/></font>
-                        </Label>
-                        <TextField fx:id="windowHeightField" promptText="600" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="100"/>
-                        <Label text="(от 400 до 1080 пикселей)" GridPane.columnIndex="2" GridPane.rowIndex="1"
-                               style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
-
-                    </GridPane>
-
-                    <!-- Кнопка сброса -->
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Button fx:id="resetSizeButton" text="Сброс до 800x600"
-                                style="-fx-background-color:  #95a5a6; -fx-text-fill: white; -fx-font-size: 11px;"
-                                prefWidth="140"/>
-                        <Label text="ℹ️ Изменения применятся после перезапуска приложения"
-                               style="-fx-font-size: 10px; -fx-text-fill:  #1976d2;"/>
-                    </HBox>
-
-                    <!-- Популярные размеры -->
-                    <VBox spacing="5">
-                        <Label text="Популярные размеры:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
-                        <HBox spacing="8">
-                            <Button fx:id="size800x600Button" text="800×600" prefWidth="90"
-                                    style="-fx-background-color: #ecf0f1; -fx-font-size: 10px;"/>
-                            <Button fx:id="size1024x768Button" text="1024×768" prefWidth="90"
-                                    style="-fx-background-color: #ecf0f1; -fx-font-size: 10px;"/>
-                            <Button fx:id="size1280x720Button" text="1280×720" prefWidth="90"
-                                    style="-fx-background-color: #ecf0f1; -fx-font-size: 10px;"/>
-                            <Button fx:id="size1366x768Button" text="1366×768" prefWidth="90"
-                                    style="-fx-background-color: #ecf0f1; -fx-font-size: 10px;"/>
-                        </HBox>
-                    </VBox>
-                </VBox>
-
-                <!-- Разделитель -->
                 <Separator/>
 
-                <!-- Настройки отображения чека -->
-                <Label text="Настройки отображения в чеках" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
+                <!-- Автосохранение чеков -->
+                <Label text="Автоматическое сохранение чеков" style="-fx-font-weight: bold; -fx-font-size: 15;"/>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <Label text="Папка для чеков:"/>
+                    <TextField fx:id="receiptDirField" promptText="C:/Чеки/" prefWidth="240"/>
+                    <Button fx:id="chooseReceiptDirButton" text="..." minWidth="30" onAction="#onChooseReceiptDir"/>
+                </HBox>
+                <CheckBox fx:id="autoSaveReceiptsBox" text="Автоматически сохранять чек при печати"/>
 
-                <VBox spacing="10" style="-fx-padding: 0 0 0 20;">
-                    <Label text="Выберите, какие поля должны отображаться в печатных чеках:"
-                           style="-fx-font-size: 12px; -fx-text-fill: #666666;"/>
+                <Separator/>
 
-                    <!-- Всегда показываемые поля -->
-                    <VBox spacing="5" style="-fx-padding: 10; -fx-background-color: #e8f5e9; -fx-background-radius: 5;">
-                        <Label text="Всегда отображаются:" style="-fx-font-weight: bold; -fx-font-size: 12px;"/>
-                        <Label text="✓ Название компании" style="-fx-text-fill: #27ae60; -fx-font-size: 12px;"/>
-                        <Label text="✓ Адрес" style="-fx-text-fill: #27ae60; -fx-font-size: 12px;"/>
-                        <Label text="✓ Телефон" style="-fx-text-fill: #27ae60; -fx-font-size:  12px;"/>
-                        <Label text="✓ Подпись продавца" style="-fx-text-fill: #27ae60; -fx-font-size:  12px;"/>
-                    </VBox>
-
-                    <!-- Опциональные поля -->
-                    <VBox spacing="8" style="-fx-padding:  10; -fx-background-color: #fff3e0; -fx-background-radius: 5;">
-                        <Label text="Оп��иональные поля:" style="-fx-font-weight: bold; -fx-font-size: 12px;"/>
-
-                        <!-- ИНН -->
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="▪" style="-fx-font-size: 16px; -fx-text-fill: #f39c12;"/>
-                            <Label text="ИНН - настраивается выше" style="-fx-font-size: 12px; -fx-text-fill: #666;"/>
-                        </HBox>
-
-                        <!-- Подпись покупателя -->
-                        <CheckBox fx:id="showBuyerSignatureCheckBox" text="Показывать поле подписи покупателя">
-                            <font><Font size="13"/></font>
-                        </CheckBox>
-                    </VBox>
-                </VBox>
+                <Label text="Дополнительные опции для чека" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
+                <HBox spacing="12">
+                    <CheckBox fx:id="showInnBox" text="Показывать ИНН"/>
+                    <CheckBox fx:id="showBuyerSignatureBox" text="Подпись покупателя"/>
+                </HBox>
 
             </VBox>
         </ScrollPane>
@@ -178,10 +100,11 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 15; -fx-background-color: #f5f5f5;">
             <Button fx:id="saveButton" text="Сохранить" prefWidth="120"
+                    onAction="#onSaveSettings"
                     style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14;"/>
             <Button fx:id="cancelButton" text="Отмена" prefWidth="120"
+                    onAction="#onCancel"
                     style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 14;"/>
         </HBox>
     </bottom>
-
 </BorderPane>

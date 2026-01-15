@@ -1,23 +1,28 @@
-package ru.fixbyte. controller;
+package ru.fixbyte.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx. scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
-import javafx.scene. image.ImageView;
+import javafx.scene.image.ImageView;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.stage. Stage;
+import javafx.stage.Stage;
 import ru.fixbyte.model.Product;
 import ru.fixbyte.model.ReceiptItem;
-import ru.fixbyte. model.CompanySettings;
+import ru.fixbyte.model.CompanySettings;
 import ru.fixbyte.database.DatabaseManager;
 import ru.fixbyte.view.ReceiptPrinter;
 
-import java.io. InputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class MainController {
     @FXML private ComboBox<Product> productComboBox;
@@ -36,7 +41,7 @@ public class MainController {
     @FXML private Button manageProductsButton;
     @FXML private Button settingsButton;
     @FXML private ImageView logoImageView;
-
+    @FXML private TextArea addressField;
     private DatabaseManager dbManager;
     private ObservableList<ReceiptItem> receiptItems;
 
@@ -46,26 +51,18 @@ public class MainController {
 
         try {
             dbManager = new DatabaseManager();
-            receiptItems = FXCollections. observableArrayList();
+            receiptItems = FXCollections.observableArrayList();
 
-            // Загружаем логотип
+            // Загружаем логотип и название компании
             loadLogo();
-
-            // Загружаем название компании
             companyNameLabel.setText(CompanySettings.getCompanyName());
-
-            // Проверяем, что все элементы загружены
-            if (nameColumn == null) {
-                System.err.println("ОШИБКА: nameColumn is null");
-                return;
-            }
 
             // Настройка таблицы
             nameColumn.setCellValueFactory(cellData ->
                     new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProduct().getName()));
             priceColumn.setCellValueFactory(cellData ->
                     new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getProduct().getPrice()).asObject());
-            quantityColumn. setCellValueFactory(new PropertyValueFactory<>("quantity"));
+            quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
             unitColumn.setCellValueFactory(cellData ->
                     new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProduct().getUnit()));
             totalColumn.setCellValueFactory(new PropertyValueFactory<>("total"));
@@ -85,7 +82,7 @@ public class MainController {
             System.out.println("MainController инициализирован успешно!");
 
         } catch (Exception e) {
-            System.err. println("ОШИБКА в initialize():");
+            System.err.println("ОШИБКА в initialize():");
             e.printStackTrace();
             showError("Ошибка инициализации:  " + e.getMessage());
         }
@@ -93,16 +90,19 @@ public class MainController {
 
     private void loadLogo() {
         try {
-            InputStream logoStream = getClass().getResourceAsStream(CompanySettings.getLogoPath());
-            if (logoStream != null) {
-                Image logo = new Image(logoStream);
-                logoImageView.setImage(logo);
-                System.out.println("Логотип загружен");
-            } else {
-                System.out.println("Логотип не найден по пути: " + CompanySettings.getLogoPath());
-                // Можно установить логотип по умолчанию
-                logoImageView. setVisible(false);
+            String logoPath = CompanySettings.getLogoPath();
+            if (logoPath != null && !logoPath.isEmpty()) {
+                InputStream logoStream = getClass().getResourceAsStream(logoPath);
+                if (logoStream != null) {
+                    Image logo = new Image(logoStream);
+                    logoImageView.setImage(logo);
+                    logoImageView.setVisible(true);
+                    System.out.println("Логотип загружен");
+                    return;
+                }
             }
+            System.out.println("Логотип не найден — скрыто изображение");
+            logoImageView.setVisible(false);
         } catch (Exception e) {
             System.err.println("Ошибка загрузки логотипа:  " + e.getMessage());
             logoImageView.setVisible(false);
@@ -121,16 +121,16 @@ public class MainController {
     }
 
     private void addItemToReceipt() {
-        Product selectedProduct = productComboBox. getValue();
+        Product selectedProduct = productComboBox.getValue();
         String quantityText = quantityField.getText();
 
-        if (selectedProduct == null || quantityText. isEmpty()) {
+        if (selectedProduct == null || quantityText.isEmpty()) {
             showError("Выберите товар и введите количество");
             return;
         }
 
         try {
-            double quantity = Double. parseDouble(quantityText);
+            double quantity = Double.parseDouble(quantityText);
             if (quantity <= 0) {
                 showError("Количество должно быть больше нуля");
                 return;
@@ -157,8 +157,76 @@ public class MainController {
             return;
         }
 
+        // Построение текста чека для печати и для файла
+        String receiptText = buildReceiptText();
+
+        // Сохраняем чек в файл, если это включено в настройках
+        saveReceiptToFile(receiptText);
+
+        // Реальная печать — вызываем ReceiptPrinter
         ReceiptPrinter printer = new ReceiptPrinter();
         printer.print(receiptItems);
+
+        // Очистим чек после печати (если нужно)
+        receiptItems.clear();
+        updateTotal();
+    }
+
+    /**
+     * Строит строку (текст чека)
+     */
+    private String buildReceiptText() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("========================================\n");
+        sb.append("           ТОВАРНЫЙ ЧЕК\n");
+        sb.append("========================================\n\n");
+
+        sb.append(CompanySettings.getCompanyName()).append("\n");
+        sb.append("ИНН: ").append(CompanySettings.getInn()).append("\n");
+        sb.append(CompanySettings.getAddress()).append("\n");
+        sb.append("Дата: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))).append("\n\n");
+
+        sb.append("----------------------------------------\n");
+        sb.append("Наименование         Кол-во   Цена  Сумма\n");
+        sb.append("----------------------------------------\n");
+
+        for (ReceiptItem item : receiptItems) {
+            sb.append(String.format(
+                    "%-20.17s %7.2f %7.2f %7.2f\n",
+                    truncate(item.getProduct().getName(), 17),
+                    item.getQuantity(),
+                    item.getProduct().getPrice(),
+                    item.getTotal()
+            ));
+        }
+        sb.append("----------------------------------------\n");
+        sb.append(String.format("Итого: %33.2f руб.\n", receiptItems.stream().mapToDouble(ReceiptItem::getTotal).sum()));
+        sb.append("========================================\n");
+        sb.append("Спасибо за покупку!\n");
+        sb.append("========================================\n");
+        return sb.toString();
+    }
+
+    /**
+     * Сохраняет чек в файл (если настройка включена)
+     */
+    private void saveReceiptToFile(String receiptText) {
+        if (!CompanySettings.isAutoSaveReceipts()) return;
+        String dir = CompanySettings.getReceiptSaveDir();
+        if (dir == null || dir.trim().isEmpty()) return;
+
+        File folder = new File(dir);
+        if (!folder.exists()) folder.mkdirs();
+
+        String fileName = "Чек_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
+        File receiptFile = new File(folder, fileName);
+
+        try (PrintWriter writer = new PrintWriter(receiptFile, StandardCharsets.UTF_8)) {
+            writer.print(receiptText);
+            System.out.println("Чек сохранён в файл: " + receiptFile.getAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("Ошибка сохранения чека: " + e);
+        }
     }
 
     private void clearReceipt() {
@@ -186,7 +254,6 @@ public class MainController {
         try {
             System.out.println("Открытие настроек...");
 
-            // Проверяем наличие файла
             java.net.URL fxmlUrl = getClass().getResource("/settings.fxml");
             System.out.println("URL settings.fxml: " + fxmlUrl);
 
@@ -202,7 +269,6 @@ public class MainController {
             stage.setScene(scene);
             stage.showAndWait();
 
-            // Обновляем интерфейс после закрытия настроек
             loadLogo();
             companyNameLabel.setText(CompanySettings.getCompanyName());
 
@@ -216,9 +282,17 @@ public class MainController {
     }
 
     private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType. ERROR);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Ошибка");
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Обрезает строку до maxLen символов (с троеточием)
+     */
+    private String truncate(String s, int maxLen) {
+        if (s == null) return "";
+        return s.length() > maxLen ? s.substring(0, maxLen - 1) + "…" : s;
     }
 }
