@@ -9,7 +9,7 @@ public class CompanySettings {
     private static String address = "г. Москва, ул. Примерная, д. 1";
     private static String phone = "+7 (999) 123-45-67";
     private static String inn = "1234567890";
-    private static String logoPath = "/logo.png";
+    private static String logoPath = "/logomain.png";
     private static boolean showInn = true;
     private static boolean showBuyerSignature = true;
 

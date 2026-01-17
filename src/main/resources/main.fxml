@@ -40,7 +40,7 @@
 
             <!-- Кнопка настроек -->
             <Button fx:id="settingsButton" text="⚙ Настройки" prefWidth="130"
-                    style="-fx-background-color:  #9b59b6; -fx-text-fill: white; -fx-font-size: 14;">
+                    style="-fx-background-color:  #e74c3c; -fx-text-fill: white; -fx-font-size: 14;">
             </Button>
 
         </HBox>
