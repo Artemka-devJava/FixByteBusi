@@ -9,7 +9,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.scene.input.*;
+
 import ru.fixbyte.model.Product;
 import ru.fixbyte.model.ReceiptItem;
 import ru.fixbyte.model.CompanySettings;
@@ -23,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 
 public class MainController {
     @FXML private ComboBox<Product> productComboBox;
@@ -43,9 +45,31 @@ public class MainController {
     @FXML private Button settingsButton;
     @FXML private ImageView logoImageView;
     @FXML private TextArea addressField;
+    @FXML private Button aboutButton;
+
+    // --- Канбан доска ---
+    @FXML private VBox todoColumn;
+    @FXML private VBox inProgressColumn;
+    @FXML private VBox doneColumn;
+    @FXML private Button addTodoCardButton;
+    @FXML private StackPane todoWrap;
+    @FXML private StackPane inProgressWrap;
+    @FXML private StackPane doneWrap;
+
+    // --- Стили для Kanban и диалогов ---
+    private static final String CARD_STYLE =
+            "-fx-background-color: linear-gradient(to bottom,#ecf0f1 75%,#fbfbfb);" +
+                    " -fx-padding: 7 11 7 11; -fx-background-radius: 7;" +
+                    " -fx-border-color: #dadee3; -fx-border-radius: 7;" +
+                    " -fx-effect: dropshadow(two-pass-box,#b0bec5,2,0,0,1);";
+    private static final String CARD_DRAGGED_STYLE =
+            "-fx-background-color: #fffde7; -fx-padding: 7 11 7 11; -fx-background-radius: 7; -fx-border-color: #fbc02d; -fx-border-radius: 7;";
+    private static final String COLUMN_DRAG_OVER =
+            "-fx-background-color: #dbeafe; -fx-background-radius: 12;";
+
     private DatabaseManager dbManager;
     private ObservableList<ReceiptItem> receiptItems;
-    @FXML private Button aboutButton;
+
     @FXML
     public void initialize() {
         System.out.println("Инициализация MainController...");
@@ -54,11 +78,20 @@ public class MainController {
             dbManager = new DatabaseManager();
             receiptItems = FXCollections.observableArrayList();
 
-            // Загружаем логотип и название компании
+            // ---- КАНБАН ----
+            setupDnDKanban(todoWrap, todoColumn);
+            setupDnDKanban(inProgressWrap, inProgressColumn);
+            setupDnDKanban(doneWrap, doneColumn);
+            if (addTodoCardButton != null)
+                addTodoCardButton.setOnAction(e -> addKanbanCard(
+                        todoColumn,
+                        "Новое имя", "Контакты", "0.00", "Текст задачи"
+                ));
+
+            // ---- КАССА ----
             loadLogo();
             companyNameLabel.setText(CompanySettings.getCompanyName());
 
-            // Настройка таблицы
             nameColumn.setCellValueFactory(cellData ->
                     new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProduct().getName()));
             priceColumn.setCellValueFactory(cellData ->
@@ -70,10 +103,8 @@ public class MainController {
 
             receiptTable.setItems(receiptItems);
 
-            // Загрузка товаров
             loadProducts();
 
-            // Обработчики событий
             addButton.setOnAction(e -> addItemToReceipt());
             printButton.setOnAction(e -> printReceipt());
             clearButton.setOnAction(e -> clearReceipt());
@@ -89,6 +120,142 @@ public class MainController {
         }
     }
 
+    // ------ КАНБАН ------
+    private void addKanbanCard(VBox column, String name, String contacts, String price, String taskText) {
+        HBox card = new HBox(10);
+        card.setStyle(CARD_STYLE);
+
+        VBox infoBox = new VBox(2);
+        infoBox.setPrefWidth(130);
+
+        Label nameLbl = new Label("Имя: " + name);
+        nameLbl.setStyle("-fx-font-family:'Arial'; -fx-font-weight:bold; -fx-font-size: 12; -fx-text-fill: #34495e;");
+        Label priceLbl = new Label("Цена: " + price + " руб.");
+        priceLbl.setStyle("-fx-font-family:'Arial'; -fx-text-fill: #27ae60; -fx-font-size: 12;");
+        infoBox.getChildren().addAll(nameLbl, priceLbl);
+
+        String shortTask = (taskText.length() > 30) ? taskText.substring(0,28) + "…" : taskText;
+        Label taskLbl = new Label("Задача: " + shortTask);
+        taskLbl.setStyle("-fx-font-family:'Arial'; -fx-text-fill: #3498db; -fx-font-size: 11;");
+
+        Button delete = new Button("✖");
+        delete.setStyle("-fx-background-color: #e74c3c;-fx-text-fill: white; -fx-font-size: 10; -fx-background-radius: 5;");
+        delete.setOnAction(e -> column.getChildren().remove(card));
+        VBox btnBox = new VBox(delete);
+        btnBox.setAlignment(javafx.geometry.Pos.TOP_RIGHT);
+
+        card.getChildren().addAll(infoBox, taskLbl, btnBox);
+        HBox.setHgrow(infoBox, Priority.ALWAYS);
+        card.setMinHeight(38);
+        card.setMaxHeight(45);
+
+        // Drag & Drop
+        card.setOnDragDetected(event -> {
+            Dragboard db = card.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            content.putString("kanban-card");
+            db.setContent(content);
+            card.setStyle(CARD_DRAGGED_STYLE);
+            card.setUserData(column);
+            event.consume();
+        });
+        card.setOnDragDone(e -> card.setStyle(CARD_STYLE));
+
+        card.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                showKanbanCardDialog(card, nameLbl, priceLbl, taskLbl, contacts, priceLbl.getText(), card.getUserData() != null ? card.getUserData().toString() : taskText);
+            }
+        });
+
+        card.setUserData(contacts + "|" + price + "|" + taskText);
+        card.setAccessibleText(taskText);
+        column.getChildren().add(card);
+    }
+
+    private void setupDnDKanban(StackPane wrapper, VBox column) {
+        // wrapper — StackPane, column — VBox внутри него
+        wrapper.setOnDragOver(event -> {
+            if (event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+                wrapper.setStyle(COLUMN_DRAG_OVER);
+            }
+            event.consume();
+        });
+        wrapper.setOnDragExited(e -> wrapper.setStyle(""));
+        wrapper.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                HBox card = (HBox) event.getGestureSource();
+                VBox fromColumn = (VBox) card.getUserData();
+                if (fromColumn != null && fromColumn != column) {
+                    fromColumn.getChildren().remove(card);
+                    column.getChildren().add(card);
+                } else if (fromColumn == column) {
+                    fromColumn.getChildren().remove(card);
+                    column.getChildren().add(card);
+                }
+                success = true;
+            }
+            event.setDropCompleted(success);
+            wrapper.setStyle("");
+            event.consume();
+        });
+    }
+
+    // --- увеличенный подробный диалог карточки ---
+    private void showKanbanCardDialog(HBox card, Label nameLbl, Label priceLbl, Label taskLbl, String contacts, String price, String taskText) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Карточка задачи");
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(18);
+        grid.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 18;");
+
+        Label nameLab = new Label("Имя:");
+        nameLab.setStyle("-fx-text-fill:#34495e;-fx-font-weight:bold; -fx-font-size:16;");
+        Label contactsLab = new Label("Контакты:");
+        contactsLab.setStyle("-fx-text-fill:#888;-fx-font-size:14;");
+        Label priceLab = new Label("Цена:");
+        priceLab.setStyle("-fx-text-fill:#27ae60;-fx-font-size:14;");
+        Label taskLab = new Label("Задача:");
+        taskLab.setStyle("-fx-text-fill:#3498db;-fx-font-size:15;");
+
+        TextField nameField = new TextField(nameLbl.getText().replaceFirst("Имя: ",""));
+        TextField contactsField = new TextField(contacts);
+        TextField priceField = new TextField(priceLbl.getText().replaceFirst("Цена: ","").replace(" руб.",""));
+        TextArea taskArea = new TextArea(card.getAccessibleText() == null ? "" : card.getAccessibleText());
+        taskArea.setPrefRowCount(7);
+        taskArea.setWrapText(true);
+        taskArea.setStyle(
+                "-fx-border-color: #3498db;-fx-focus-color: #3498db;-fx-background-radius:4;" +
+                        "-fx-font-size:14; -fx-text-fill:#1a2539;"
+        );
+
+        grid.addRow(0, nameLab, nameField);
+        grid.addRow(1, contactsLab, contactsField);
+        grid.addRow(2, priceLab, priceField);
+        grid.addRow(3, taskLab, taskArea);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                nameLbl.setText("Имя: " + nameField.getText());
+                priceLbl.setText("Цена: " + priceField.getText() + " руб.");
+                String newTask = taskArea.getText();
+                String shortTask2 = (newTask.length() > 30) ? newTask.substring(0,28) + "…" : newTask;
+                taskLbl.setText("Задача: " + shortTask2);
+                card.setAccessibleText(newTask); // сохраняем длинную задачу
+                card.setUserData(contactsField.getText() + "|" + priceField.getText() + "|" + newTask);
+            }
+        });
+    }
+
+    // ------ /КАНБАН ------
+
+    // КАССА
     private void loadLogo() {
         try {
             String logoPath = CompanySettings.getLogoPath();
@@ -96,11 +263,10 @@ public class MainController {
                 InputStream logoStream = getClass().getResourceAsStream(logoPath);
                 if (logoStream != null) {
                     Image logo = new Image(logoStream);
-                    // Например, ограничим размер до 96x96 (или любые ваши значения!)
                     logoImageView.setFitWidth(96);
                     logoImageView.setFitHeight(96);
-                    logoImageView.setPreserveRatio(true);      // сохранять пропорции!
-                    logoImageView.setSmooth(true);              // сглаживание
+                    logoImageView.setPreserveRatio(true);
+                    logoImageView.setSmooth(true);
                     logoImageView.setImage(logo);
                     logoImageView.setVisible(true);
                     System.out.println("Логотип загружен");
@@ -129,12 +295,10 @@ public class MainController {
     private void addItemToReceipt() {
         Product selectedProduct = productComboBox.getValue();
         String quantityText = quantityField.getText();
-
         if (selectedProduct == null || quantityText.isEmpty()) {
             showError("Выберите товар и введите количество");
             return;
         }
-
         try {
             double quantity = Double.parseDouble(quantityText);
             if (quantity <= 0) {
@@ -162,25 +326,16 @@ public class MainController {
             showError("Чек пуст");
             return;
         }
-
-        // Построение текста чека для печати и для файла
         String receiptText = buildReceiptText();
-
-        // Сохраняем чек в файл, если это включено в настройках
         saveReceiptToFile(receiptText);
 
-        // Реальная печать — вызываем ReceiptPrinter
         ReceiptPrinter printer = new ReceiptPrinter();
         printer.print(receiptItems);
 
-        // Очистим чек после печати (если нужно)
         receiptItems.clear();
         updateTotal();
     }
 
-    /**
-     * Строит строку (текст чека)
-     */
     private String buildReceiptText() {
         StringBuilder sb = new StringBuilder();
         sb.append("========================================\n");
@@ -213,9 +368,6 @@ public class MainController {
         return sb.toString();
     }
 
-    /**
-     * Сохраняет чек в файл (если настройка включена)
-     */
     private void saveReceiptToFile(String receiptText) {
         if (!CompanySettings.isAutoSaveReceipts()) return;
         String dir = CompanySettings.getReceiptSaveDir();
@@ -246,16 +398,12 @@ public class MainController {
             Scene scene = new Scene(loader.load());
             Stage stage = new Stage();
             stage.setTitle("Управление товарами");
-
-            // --- ДОБАВЛЕНИЕ ИКОНКИ ---
-            java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+            InputStream iconStream = getClass().getResourceAsStream("/logo.png");
             if (iconStream != null) {
-                stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+                stage.getIcons().add(new Image(iconStream));
             } else {
-                System.err.println("icon.png не найден для окна управления товарами!");
+                System.err.println("logo.png не найден для окна управления товарами!");
             }
-            // --- КОНЕЦ ДОБАВЛЕНИЯ ИКОНКИ ---
-
             stage.setScene(scene);
             stage.showAndWait();
             loadProducts();
@@ -282,16 +430,12 @@ public class MainController {
             Scene scene = new Scene(loader.load());
             Stage stage = new Stage();
             stage.setTitle("Настройки");
-
-            // ------ ДОБАВЛЯЕМ ИКОНКУ ------
-            java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+            InputStream iconStream = getClass().getResourceAsStream("/logo.png");
             if (iconStream != null) {
-                stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+                stage.getIcons().add(new Image(iconStream));
             } else {
                 System.err.println("logo.png не найден для окна настроек!");
             }
-            // ------ КОНЕЦ ДОБАВЛЕНИЯ ИКОНКИ ------
-
             stage.setScene(scene);
             stage.showAndWait();
 
@@ -312,27 +456,20 @@ public class MainController {
         alert.setTitle("Ошибка");
         alert.setHeaderText(null);
         alert.setContentText(message);
-
-        // --- Изменяем иконку окна ---
         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
-        java.io.InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+        InputStream iconStream = getClass().getResourceAsStream("/logo.png");
         if (iconStream != null) {
             stage.getIcons().clear();
-            stage.getIcons().add(new javafx.scene.image.Image(iconStream));
-        } else {
-            System.err.println("icon.png не найден для окна ошибки!");
+            stage.getIcons().add(new Image(iconStream));
         }
-
         alert.showAndWait();
     }
 
-    /**
-     * Обрезает строку до maxLen символов (с троеточием)
-     */
     private String truncate(String s, int maxLen) {
         if (s == null) return "";
         return s.length() > maxLen ? s.substring(0, maxLen - 1) + "…" : s;
     }
+
     @FXML
     private void onAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -342,19 +479,20 @@ public class MainController {
                 """
                 Программа автоматизации торговли FixByteBusi
                 Версия: 0.2
-    
+
                 Разработчик: Артём Т. (Artemka-devJava)
                 Email: artem@tarabakin.ru
-    
+
                 © 2024 Artemka-devJava
                 Все права защищены.
                 """
         );
-        // --------- смена иконки ---------
         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
-        stage.getIcons().clear();
-        stage.getIcons().add(new javafx.scene.image.Image(Objects.requireNonNull(getClass().getResourceAsStream("/logo.png"))));
-        // --------- конец смены иконки ----
+        InputStream iconStream = getClass().getResourceAsStream("/logo.png");
+        if (iconStream != null) {
+            stage.getIcons().clear();
+            stage.getIcons().add(new Image(iconStream));
+        }
         alert.showAndWait();
     }
 }
