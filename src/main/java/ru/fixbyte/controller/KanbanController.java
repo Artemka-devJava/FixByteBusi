@@ -1,15 +1,11 @@
 package ru.fixbyte.controller;
 
-import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ButtonType;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
+import javafx.geometry.Pos;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -30,11 +26,15 @@ public class KanbanController {
                     " -fx-effect: dropshadow(two-pass-box,#b0bec5,2,0,0,2);";
     private static final String CARD_DRAGGED_STYLE =
             "-fx-background-color: #fffde7; -fx-padding: 16 18 16 18; -fx-background-radius: 12; -fx-border-color: #fbc02d; -fx-border-radius: 12;";
-    private static final String COLUMN_DRAG_OVER =
-            "-fx-background-color: #dbeafe; -fx-background-radius: 12;";
 
-    public KanbanController(VBox todoColumn, VBox inProgressColumn, VBox doneColumn,
-                            Button addTodoCardButton, StackPane todoWrap, StackPane inProgressWrap, StackPane doneWrap) {
+    private static final String TODO_DRAG_OVER = "-fx-background-color: #ffe3e3; -fx-background-radius: 12;";
+    private static final String INPROG_DRAG_OVER = "-fx-background-color: #e3ffd2; -fx-background-radius: 12;";
+    private static final String DONE_DRAG_OVER = "-fx-background-color: #d2e3ff; -fx-background-radius: 12;";
+
+    public KanbanController(
+            VBox todoColumn, VBox inProgressColumn, VBox doneColumn,
+            Button addTodoCardButton, StackPane todoWrap, StackPane inProgressWrap, StackPane doneWrap) {
+
         this.todoColumn = todoColumn;
         this.inProgressColumn = inProgressColumn;
         this.doneColumn = doneColumn;
@@ -43,15 +43,15 @@ public class KanbanController {
         this.inProgressWrap = inProgressWrap;
         this.doneWrap = doneWrap;
 
-        setupDnDKanban(todoWrap, todoColumn);
-        setupDnDKanban(inProgressWrap, inProgressColumn);
-        setupDnDKanban(doneWrap, doneColumn);
+        setupDnDKanban(todoWrap, todoColumn, TODO_DRAG_OVER);
+        setupDnDKanban(inProgressWrap, inProgressColumn, INPROG_DRAG_OVER);
+        setupDnDKanban(doneWrap, doneColumn, DONE_DRAG_OVER);
 
         if (addTodoCardButton != null) {
             if (!todoColumn.getChildren().contains(addTodoCardButton)) {
                 todoColumn.getChildren().add(addTodoCardButton);
             }
-            addTodoCardButton.setOnAction(e -> addKanbanCard(todoColumn, "Новое имя", "Контакты", "0.00", "Текст задачи"));
+            addTodoCardButton.setOnAction(e -> addKanbanCard(todoColumn, "Новое имя", "Контакты", "0.00", "", false));
         }
 
         loadKanbanFromFile();
@@ -73,33 +73,38 @@ public class KanbanController {
 
     private void saveColumnCards(PrintWriter writer, VBox column, String col) {
         for (javafx.scene.Node node : column.getChildren()) {
+            // Пропустить кнопку "Добавить"
+            if (node == addTodoCardButton) continue;
             if (node instanceof HBox card) {
                 VBox infoBox = (VBox) card.getChildren().get(1);
                 Label nameLbl = (Label) infoBox.getChildren().get(0);
                 Label priceLbl = (Label) infoBox.getChildren().get(1);
                 Label contactLbl = (Label) infoBox.getChildren().get(2);
-                Label taskLbl = (Label) card.getChildren().get(2);
+                CheckBox paidBox = (CheckBox) infoBox.getChildren().get(3);
 
-                String name = nameLbl.getText().replaceFirst("Имя: ","");
-                String price = priceLbl.getText().replaceFirst("Цена: ","").replace(" руб.","");
-                String contacts = contactLbl.getText().replaceFirst("Контакты: ","");
-                String task = taskLbl.getText().replaceFirst("Задача: ","");
+                String name = nameLbl.getText().replaceFirst("Имя: ", "");
+                String price = priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", "");
+                String contacts = contactLbl.getText().replaceFirst("Контакты: ", "");
+                String paid = paidBox.isSelected() ? "1" : "0";
 
+                String task = card.getAccessibleText() != null ? card.getAccessibleText() : "";
                 writer.println(col + "|" +
                         escapeKanban(name) + "|" +
                         escapeKanban(contacts) + "|" +
                         escapeKanban(price) + "|" +
-                        escapeKanban(task));
+                        escapeKanban(task) + "|" +
+                        paid);
             }
         }
     }
 
     private String escapeKanban(String s) {
         if (s == null) return "";
-        return s.replace("|", "%7C").replace("\n","\\n");
+        return s.replace("|", "%7C").replace("\n", "\\n");
     }
+
     private String unescapeKanban(String s) {
-        return s.replace("%7C","|").replace("\\n","\n");
+        return s.replace("%7C", "|").replace("\\n", "\n");
     }
 
     public void loadKanbanFromFile() {
@@ -114,17 +119,18 @@ public class KanbanController {
             while (sc.hasNextLine()) {
                 String line = sc.nextLine().trim();
                 if (line.isEmpty()) continue;
-                String[] sp = line.split("\\|", 5);
-                if (sp.length < 5) continue;
+                String[] sp = line.split("\\|", 6);
+                if (sp.length < 6) continue;
                 String col = sp[0];
                 String name = unescapeKanban(sp[1]);
                 String contacts = unescapeKanban(sp[2]);
                 String price = unescapeKanban(sp[3]);
                 String task = unescapeKanban(sp[4]);
+                boolean paid = "1".equals(sp[5]);
                 switch (col) {
-                    case "todo" -> addKanbanCardNoSave(todoColumn, name, contacts, price, task);
-                    case "inprogress" -> addKanbanCardNoSave(inProgressColumn, name, contacts, price, task);
-                    case "done" -> addKanbanCardNoSave(doneColumn, name, contacts, price, task);
+                    case "todo" -> addKanbanCardNoSave(todoColumn, name, contacts, price, task, paid);
+                    case "inprogress" -> addKanbanCardNoSave(inProgressColumn, name, contacts, price, task, paid);
+                    case "done" -> addKanbanCardNoSave(doneColumn, name, contacts, price, task, paid);
                 }
             }
         } catch (Exception ex) {
@@ -135,12 +141,13 @@ public class KanbanController {
         }
     }
 
-    private void addKanbanCardNoSave(VBox column, String name, String contacts, String price, String taskText) {
-        HBox card = createKanbanCard(column, name, contacts, price, taskText, false);
+    private void addKanbanCardNoSave(VBox column, String name, String contacts, String price, String taskText, boolean paid) {
+        HBox card = createKanbanCard(column, name, contacts, price, taskText, paid, false);
         column.getChildren().add(card);
     }
-    public void addKanbanCard(VBox column, String name, String contacts, String price, String taskText) {
-        HBox card = createKanbanCard(column, name, contacts, price, taskText, true);
+
+    public void addKanbanCard(VBox column, String name, String contacts, String price, String taskText, boolean paid) {
+        HBox card = createKanbanCard(column, name, contacts, price, taskText, paid, true);
         if (addTodoCardButton != null && column == todoColumn) {
             int btnIdx = column.getChildren().indexOf(addTodoCardButton);
             if (btnIdx >= 0) {
@@ -154,13 +161,13 @@ public class KanbanController {
         saveKanbanToFile();
     }
 
-    private HBox createKanbanCard(VBox column, String name, String contacts, String price, String taskText, boolean autosaveOnEdit) {
+    // Карточка: имя, цена, контакты, чекбокс "Оплачено"
+    private HBox createKanbanCard(VBox column, String name, String contacts, String price, String taskText, boolean paid, boolean autosaveOnEdit) {
         HBox card = new HBox(16);
         card.setStyle(CARD_STYLE);
         card.setMinHeight(90);
         card.setMaxHeight(120);
 
-        // Иконка
         ImageView iconView;
         try {
             Image userIcon = new Image(getClass().getResourceAsStream("/logomain.png"));
@@ -174,18 +181,24 @@ public class KanbanController {
         iconView.setSmooth(true);
 
         VBox infoBox = new VBox(6);
-        infoBox.setPrefWidth(148);
+        infoBox.setPrefWidth(170);
 
         Label nameLbl = new Label("Имя: " + name);
         nameLbl.setStyle("-fx-font-family:'Arial'; -fx-font-weight:bold; -fx-font-size: 15; -fx-text-fill: #34495e;");
-
         Label priceLbl = new Label("Цена: " + price + " руб.");
         priceLbl.setStyle("-fx-font-family:'Arial'; -fx-text-fill: #27ae60; -fx-font-size: 14;");
-
         Label contactLbl = new Label("Контакты: " + contacts);
         contactLbl.setStyle("-fx-font-family:'Arial'; -fx-text-fill: #888; -fx-font-size: 13;");
 
-        infoBox.getChildren().addAll(nameLbl, priceLbl, contactLbl);
+        CheckBox paidBox = new CheckBox("Оплачено");
+        paidBox.setSelected(paid);
+        paidBox.setStyle("-fx-font-size: 13; -fx-font-family:'Arial'");
+        paidBox.setAlignment(Pos.CENTER_LEFT);
+
+        // Если нужно автосохранять состояние оплаты:
+        paidBox.setOnAction(e -> saveKanbanToFile());
+
+        infoBox.getChildren().addAll(nameLbl, priceLbl, contactLbl, paidBox);
 
         Button delete = new Button("✖");
         delete.setStyle("-fx-background-color: #e74c3c;-fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 9;");
@@ -194,12 +207,11 @@ public class KanbanController {
             saveKanbanToFile();
         });
         VBox btnBox = new VBox(delete);
-        btnBox.setAlignment(javafx.geometry.Pos.TOP_RIGHT);
+        btnBox.setAlignment(Pos.TOP_RIGHT);
 
         card.getChildren().addAll(iconView, infoBox, btnBox);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-        // Drag&Drop и двойной клик не меняются!
         card.setOnDragDetected(event -> {
             Dragboard db = card.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
@@ -213,22 +225,22 @@ public class KanbanController {
 
         card.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                showKanbanCardDialog(card, nameLbl, priceLbl, contactLbl, null, contacts, priceLbl.getText(),
+                showKanbanCardDialog(card, nameLbl, priceLbl, contactLbl, paidBox, null, contacts, priceLbl.getText(),
                         card.getUserData() != null ? card.getUserData().toString() : taskText, autosaveOnEdit);
             }
         });
 
-        card.setUserData(contacts + "|" + price + "|" + taskText);
+        card.setUserData(contacts + "|" + price + "|" + taskText + "|" + (paid ? "1" : "0"));
         card.setAccessibleText(taskText);
 
         return card;
     }
 
-    private void setupDnDKanban(StackPane wrapper, VBox column) {
+    private void setupDnDKanban(StackPane wrapper, VBox column, String dragOverColor) {
         wrapper.setOnDragOver(event -> {
-            if (event.getDragboard().hasString()) {
+            if (event.getGestureSource() != wrapper && event.getDragboard().hasString()) {
                 event.acceptTransferModes(TransferMode.MOVE);
-                wrapper.setStyle(COLUMN_DRAG_OVER);
+                wrapper.setStyle(dragOverColor);
             }
             event.consume();
         });
@@ -239,22 +251,14 @@ public class KanbanController {
             if (db.hasString()) {
                 HBox card = (HBox) event.getGestureSource();
                 VBox fromColumn = (VBox) card.getUserData();
-                if (fromColumn != null && fromColumn != column) {
+                if (fromColumn != null) {
                     fromColumn.getChildren().remove(card);
-                    if (addTodoCardButton!=null && column == todoColumn && column.getChildren().contains(addTodoCardButton)) {
-                        int btnIdx = column.getChildren().indexOf(addTodoCardButton);
-                        column.getChildren().add(btnIdx, card);
-                    } else {
-                        column.getChildren().add(card);
-                    }
-                } else if (fromColumn == column) {
-                    fromColumn.getChildren().remove(card);
-                    if (addTodoCardButton!=null && column == todoColumn && column.getChildren().contains(addTodoCardButton)) {
-                        int btnIdx = column.getChildren().indexOf(addTodoCardButton);
-                        column.getChildren().add(btnIdx, card);
-                    } else {
-                        column.getChildren().add(card);
-                    }
+                }
+                if (addTodoCardButton != null && column == todoColumn && column.getChildren().contains(addTodoCardButton)) {
+                    int btnIdx = column.getChildren().indexOf(addTodoCardButton);
+                    column.getChildren().add(btnIdx, card);
+                } else {
+                    column.getChildren().add(card);
                 }
                 success = true;
                 saveKanbanToFile();
@@ -265,11 +269,13 @@ public class KanbanController {
         });
     }
 
+    // По двойному клику: полное редактирование карточки
     private void showKanbanCardDialog(
             HBox card,
             Label nameLbl,
             Label priceLbl,
             Label contactLbl,
+            CheckBox paidBox,
             Label taskLbl,
             String contacts,
             String price,
@@ -278,10 +284,8 @@ public class KanbanController {
 
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Карточка задачи");
-
-        // Светлый фон, без обводки
         dialog.getDialogPane().setPrefWidth(500);
-        dialog.getDialogPane().setPrefHeight(390);
+        dialog.getDialogPane().setPrefHeight(420);
         dialog.getDialogPane().setStyle(
                 "-fx-background-color: #f7fafc;" +
                         "-fx-background-radius: 12;"
@@ -297,7 +301,6 @@ public class KanbanController {
                         "-fx-background-radius: 10;"
         );
 
-        // Четкие, крупные и тёмные метки
         Label nameLab = new Label("Имя:");
         nameLab.setStyle("-fx-font-size: 16px; -fx-font-weight:bold; -fx-text-fill: #222;");
         nameLab.setMinWidth(100);
@@ -307,9 +310,14 @@ public class KanbanController {
         Label priceLab = new Label("Цена:");
         priceLab.setStyle("-fx-font-size: 16px; -fx-font-weight:bold; -fx-text-fill: #169c43;");
         priceLab.setMinWidth(100);
-        Label taskLab = new Label("Задача:");
-        taskLab.setStyle("-fx-font-size: 16px; -fx-font-weight:bold; -fx-text-fill: #27659b;");
-        taskLab.setMinWidth(100);
+        Label taskLabLabel = new Label("Задача:");
+        taskLabLabel.setStyle("-fx-font-size: 16px; -fx-font-weight:bold; -fx-text-fill: #27659b;");
+        taskLabLabel.setMinWidth(100);
+
+        CheckBox dialogPaidBox = new CheckBox("Оплачено");
+        dialogPaidBox.setSelected(paidBox != null && paidBox.isSelected());
+        dialogPaidBox.setStyle("-fx-font-size: 15px; -fx-font-family:'Arial'");
+        dialogPaidBox.setAlignment(Pos.CENTER_LEFT);
 
         TextField nameField = new TextField(nameLbl.getText().replaceFirst("Имя: ",""));
         nameField.setStyle("-fx-font-size: 15px;");
@@ -322,7 +330,6 @@ public class KanbanController {
         taskArea.setWrapText(true);
         taskArea.setStyle("-fx-font-size: 15px; -fx-font-family:'Arial';");
 
-        // Явно ограничиваем ширину полей, чтобы лейблы не сжимались
         nameField.setPrefWidth(290);
         contactsField.setPrefWidth(290);
         priceField.setPrefWidth(290);
@@ -331,12 +338,12 @@ public class KanbanController {
         grid.addRow(0, nameLab, nameField);
         grid.addRow(1, contactsLab, contactsField);
         grid.addRow(2, priceLab, priceField);
-        grid.addRow(3, taskLab, taskArea);
+        grid.addRow(3, taskLabLabel, taskArea);
+        grid.addRow(4, new Label(""), dialogPaidBox);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        // Стиль кнопок: зелёная и серая, без бордеров
         Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
         okButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 7;");
         Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
@@ -347,10 +354,11 @@ public class KanbanController {
                 nameLbl.setText("Имя: " + nameField.getText());
                 priceLbl.setText("Цена: " + priceField.getText() + " руб.");
                 contactLbl.setText("Контакты: " + contactsField.getText());
+                if (paidBox != null) paidBox.setSelected(dialogPaidBox.isSelected());
                 String newTask = taskArea.getText();
-                taskLbl.setText("Задача: " + newTask);
+                if (taskLbl != null) taskLbl.setText("Задача: " + newTask);
                 card.setAccessibleText(newTask);
-                card.setUserData(contactsField.getText() + "|" + priceField.getText() + "|" + newTask);
+                card.setUserData(contactsField.getText() + "|" + priceField.getText() + "|" + newTask + "|" + (dialogPaidBox.isSelected() ? "1" : "0"));
                 if (autosaveOnEdit) saveKanbanToFile();
             }
         });
