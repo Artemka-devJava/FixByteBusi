@@ -1,7 +1,7 @@
 # 🧾 FixByteBusi - Товарные чеки
 
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/technologies/downloads/)
-[![JavaFX](https://img.shields.io/badge/JavaFX-21.0.6-blue. svg)](https://openjfx.io/)
+[![JavaFX](https://img.shields.io/badge/JavaFX-21.0.6-blue.svg)](https://openjfx.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
 [![Version](https://img.shields.io/badge/Version-0.1.2-green.svg)](https://github.com/Artemka-devJava/FixByteBusi/releases)
 
