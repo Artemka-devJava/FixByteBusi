@@ -12,7 +12,7 @@
 
     <!-- Верхняя панель -->
     <top>
-        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color:  #2c3e50; -fx-padding: 15;">
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color:  rgb(230,233,237); -fx-padding: 15;">
 
             <!-- Логотип -->
             <VBox alignment="CENTER">
@@ -23,12 +23,12 @@
 
             <!-- Заголовок -->
             <VBox alignment="CENTER_LEFT">
-                <Label text="Товарный чек" textFill="white">
+                <Label text="Товарный чек" textFill="#000000">
                     <font>
                         <Font name="Arial Bold" size="24"/>
                     </font>
                 </Label>
-                <Label fx:id="companyNameLabel" text="Название компании" textFill="#ecf0f1">
+                <Label fx:id="companyNameLabel" text="Название компании" textFill="#000000">
                     <font>
                         <Font name="Arial" size="12"/>
                     </font>
