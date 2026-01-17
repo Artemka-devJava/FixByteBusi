@@ -14,7 +14,7 @@ public class AboutDialog {
         alert.setHeaderText("FixByteBusi");
         alert.setContentText(
                 """
-                Программа автоматизации торговли FixByteBusi
+                Программа услуг FixByteBusi
                 Версия: 0.3
 
                 Разработчик: Артём Т. (Artemka-devJava)

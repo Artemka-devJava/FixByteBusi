@@ -5,9 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 public class CompanySettings {
-    private static String companyName = "ООО \"Ваша Компания\"";
-    private static String address = "г. Москва, ул. Примерная, д. 1";
-    private static String phone = "+7 (999) 123-45-67";
+    private static String companyName = "ООО \"ФиксБайт\"";
+    private static String address = "г.Павлово, ул. Нижегородская 11А, 7";
+    private static String phone = "+7 (996) 566-40-46";
     private static String inn = "1234567890";
     private static String logoPath = "/logomain.png";
     private static boolean showInn = true;
