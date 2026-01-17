@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:sqlite: products.db";
+    private static final String DB_PATH = "data/products.db";
+    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
     private Connection connection;
 
     public DatabaseManager() {

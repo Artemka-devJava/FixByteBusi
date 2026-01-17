@@ -12,6 +12,7 @@ public class CompanySettings {
     private static String logoPath = "/logomain.png";
     private static boolean showInn = true;
     private static boolean showBuyerSignature = true;
+    private static String kanbanSavePath = "data/cards.txt";
 
     // Размеры окна
     private static int windowWidth = 800;
@@ -37,6 +38,7 @@ public class CompanySettings {
                     logoPath = properties.getProperty("logoPath", logoPath);
                     showInn = Boolean.parseBoolean(properties.getProperty("showInn", "true"));
                     showBuyerSignature = Boolean.parseBoolean(properties.getProperty("showBuyerSignature", "true"));
+                    kanbanSavePath = properties.getProperty("kanban_save_path", kanbanSavePath);
 
                     // Размеры окна
                     try {
@@ -82,6 +84,8 @@ public class CompanySettings {
             properties.setProperty("receipt_save_dir", receiptSaveDir == null ? "" : receiptSaveDir);
             properties.setProperty("auto_save_receipts", String.valueOf(autoSaveReceipts));
 
+            properties.setProperty("kanban_save_path", kanbanSavePath == null ? "" : kanbanSavePath);
+
             try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream("settings.properties"), StandardCharsets.UTF_8)) {
                 properties.store(writer, "Company Settings");
                 System.out.println("Настройки сохранены в файл:  settings.properties");
@@ -105,8 +109,15 @@ public class CompanySettings {
 
     public static String getReceiptSaveDir() { return receiptSaveDir; }
     public static boolean isAutoSaveReceipts() { return autoSaveReceipts; }
+    public static String getKanbanSavePath() { return kanbanSavePath; }
 
     // --- Сеттеры ---
+    public static void setKanbanSavePath(String value) {
+        if (value != null && !value.isEmpty()) {
+            kanbanSavePath = value;
+            saveSettings();
+        }
+    }
     public static void setCompanyName(String name) {
         companyName = name;
         saveSettings();
