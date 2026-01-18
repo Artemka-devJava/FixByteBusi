@@ -1,4 +1,4 @@
-package ru.fixbyte.controller;
+package ru.fixbyte.kanban.controller;
 
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -9,6 +9,8 @@ import javafx.geometry.Pos;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class KanbanController {
     private final VBox todoColumn;
@@ -18,6 +20,7 @@ public class KanbanController {
     private final StackPane todoWrap;
     private final StackPane inProgressWrap;
     private final StackPane doneWrap;
+    private final StackPane archiveArea;
 
     private static final String CARD_STYLE =
             "-fx-background-color: linear-gradient(to bottom,#ecf0f1 75%,#fbfbfb);" +
@@ -30,10 +33,12 @@ public class KanbanController {
     private static final String TODO_DRAG_OVER = "-fx-background-color: #ffe3e3; -fx-background-radius: 12;";
     private static final String INPROG_DRAG_OVER = "-fx-background-color: #e3ffd2; -fx-background-radius: 12;";
     private static final String DONE_DRAG_OVER = "-fx-background-color: #d2e3ff; -fx-background-radius: 12;";
+    private static final String ARCHIVE_DRAG_OVER = "-fx-background-color: #ffe598; -fx-background-radius: 27;";
 
     public KanbanController(
             VBox todoColumn, VBox inProgressColumn, VBox doneColumn,
-            Button addTodoCardButton, StackPane todoWrap, StackPane inProgressWrap, StackPane doneWrap) {
+            Button addTodoCardButton, StackPane todoWrap, StackPane inProgressWrap,
+            StackPane doneWrap, StackPane archiveArea) {
 
         this.todoColumn = todoColumn;
         this.inProgressColumn = inProgressColumn;
@@ -42,19 +47,31 @@ public class KanbanController {
         this.todoWrap = todoWrap;
         this.inProgressWrap = inProgressWrap;
         this.doneWrap = doneWrap;
+        this.archiveArea = archiveArea;
 
         setupDnDKanban(todoWrap, todoColumn, TODO_DRAG_OVER);
         setupDnDKanban(inProgressWrap, inProgressColumn, INPROG_DRAG_OVER);
         setupDnDKanban(doneWrap, doneColumn, DONE_DRAG_OVER);
+        setupArchiveDnD(archiveArea);
 
-        if (addTodoCardButton != null) {
-            if (!todoColumn.getChildren().contains(addTodoCardButton)) {
-                todoColumn.getChildren().add(addTodoCardButton);
-            }
-            addTodoCardButton.setOnAction(e -> addKanbanCard(todoColumn, "Новое имя", "Контакты", "0.00", "", false));
-        }
+        restoreHeaderAndAddButton();
+
+        addTodoCardButton.setOnAction(e ->
+                addKanbanCard(todoColumn, "Новое имя", "Контакты", "0.00", "", false));
 
         loadKanbanFromFile();
+    }
+
+    private void restoreHeaderAndAddButton() {
+        if (todoColumn.getChildren().isEmpty() ||
+                !(todoColumn.getChildren().get(0) instanceof Label label && "Задачи".equals(label.getText()))) {
+            Label todoHeader = new Label("Задачи");
+            todoHeader.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-padding: 0 0 9 0;");
+            todoColumn.getChildren().add(0, todoHeader);
+        }
+        if (!todoColumn.getChildren().contains(addTodoCardButton)) {
+            todoColumn.getChildren().add(1, addTodoCardButton);
+        }
     }
 
     public void saveKanbanToFile() {
@@ -73,8 +90,6 @@ public class KanbanController {
 
     private void saveColumnCards(PrintWriter writer, VBox column, String col) {
         for (javafx.scene.Node node : column.getChildren()) {
-            // Пропустить кнопку "Добавить"
-            if (node == addTodoCardButton) continue;
             if (node instanceof HBox card) {
                 VBox infoBox = (VBox) card.getChildren().get(1);
                 Label nameLbl = (Label) infoBox.getChildren().get(0);
@@ -86,8 +101,8 @@ public class KanbanController {
                 String price = priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", "");
                 String contacts = contactLbl.getText().replaceFirst("Контакты: ", "");
                 String paid = paidBox.isSelected() ? "1" : "0";
-
                 String task = card.getAccessibleText() != null ? card.getAccessibleText() : "";
+
                 writer.println(col + "|" +
                         escapeKanban(name) + "|" +
                         escapeKanban(contacts) + "|" +
@@ -108,12 +123,12 @@ public class KanbanController {
     }
 
     public void loadKanbanFromFile() {
+        clearCardsFromColumn(todoColumn, true);
+        clearCardsFromColumn(inProgressColumn, false);
+        clearCardsFromColumn(doneColumn, false);
+
         File file = new File(ru.fixbyte.model.CompanySettings.getKanbanSavePath());
         if (!file.exists()) return;
-
-        todoColumn.getChildren().clear();
-        inProgressColumn.getChildren().clear();
-        doneColumn.getChildren().clear();
 
         try (java.util.Scanner sc = new java.util.Scanner(file, StandardCharsets.UTF_8)) {
             while (sc.hasNextLine()) {
@@ -127,42 +142,67 @@ public class KanbanController {
                 String price = unescapeKanban(sp[3]);
                 String task = unescapeKanban(sp[4]);
                 boolean paid = "1".equals(sp[5]);
-                switch (col) {
-                    case "todo" -> addKanbanCardNoSave(todoColumn, name, contacts, price, task, paid);
-                    case "inprogress" -> addKanbanCardNoSave(inProgressColumn, name, contacts, price, task, paid);
-                    case "done" -> addKanbanCardNoSave(doneColumn, name, contacts, price, task, paid);
+                if ("todo".equals(col)) {
+                    addKanbanCardNoSave(todoColumn, name, contacts, price, task, paid);
+                } else if ("inprogress".equals(col)) {
+                    addKanbanCardNoSave(inProgressColumn, name, contacts, price, task, paid);
+                } else if ("done".equals(col)) {
+                    addKanbanCardNoSave(doneColumn, name, contacts, price, task, paid);
                 }
             }
         } catch (Exception ex) {
             showError("Ошибка загрузки Kanban: " + ex.getMessage());
         }
-        if (addTodoCardButton != null && !todoColumn.getChildren().contains(addTodoCardButton)) {
-            todoColumn.getChildren().add(addTodoCardButton);
+        restoreHeaderAndAddButton();
+    }
+
+    // Очищаем только карточки (HBox), остальные узлы (Label, Button) не трогаем
+    private void clearCardsFromColumn(VBox column, boolean isTodo) {
+        List<javafx.scene.Node> toRemove = column.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .collect(Collectors.toList());
+        column.getChildren().removeAll(toRemove);
+
+        // Восстанавливаем заголовки если вдруг удалились
+        if (column.getChildren().isEmpty()) {
+            String title;
+            String style;
+            if (column == todoColumn) {
+                title = "Задачи";
+                style = "-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-padding: 0 0 9 0;";
+            } else if (column == inProgressColumn) {
+                title = "В работе";
+                style = "-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db; -fx-padding: 0 0 9 0;";
+            } else {
+                title = "Готово";
+                style = "-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-padding: 0 0 9 0;";
+            }
+            Label header = new Label(title);
+            header.setStyle(style);
+            column.getChildren().add(header);
+            if (isTodo && !column.getChildren().contains(addTodoCardButton))
+                column.getChildren().add(addTodoCardButton);
+        } else if (isTodo) {
+            // обязательно кнопка после заголовка
+            if (!column.getChildren().contains(addTodoCardButton)) {
+                column.getChildren().add(1, addTodoCardButton);
+            }
         }
     }
 
+    // --- Главное: карточки добавляются В КОНЕЦ, а кнопка "Добавить карточку" остается вверху ---
     private void addKanbanCardNoSave(VBox column, String name, String contacts, String price, String taskText, boolean paid) {
-        HBox card = createKanbanCard(column, name, contacts, price, taskText, paid, false);
-        column.getChildren().add(card);
+        HBox card = createKanbanCard(name, contacts, price, taskText, paid);
+        column.getChildren().add(card); // всегда в конец
     }
 
     public void addKanbanCard(VBox column, String name, String contacts, String price, String taskText, boolean paid) {
-        HBox card = createKanbanCard(column, name, contacts, price, taskText, paid, true);
-        if (addTodoCardButton != null && column == todoColumn) {
-            int btnIdx = column.getChildren().indexOf(addTodoCardButton);
-            if (btnIdx >= 0) {
-                column.getChildren().add(btnIdx, card);
-            } else {
-                column.getChildren().add(card);
-            }
-        } else {
-            column.getChildren().add(card);
-        }
+        HBox card = createKanbanCard(name, contacts, price, taskText, paid);
+        column.getChildren().add(card); // всегда в конец
         saveKanbanToFile();
     }
 
-    // Карточка: имя, цена, контакты, чекбокс "Оплачено"
-    private HBox createKanbanCard(VBox column, String name, String contacts, String price, String taskText, boolean paid, boolean autosaveOnEdit) {
+    private HBox createKanbanCard(String name, String contacts, String price, String taskText, boolean paid) {
         HBox card = new HBox(16);
         card.setStyle(CARD_STYLE);
         card.setMinHeight(90);
@@ -195,7 +235,6 @@ public class KanbanController {
         paidBox.setStyle("-fx-font-size: 13; -fx-font-family:'Arial'");
         paidBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Если нужно автосохранять состояние оплаты:
         paidBox.setOnAction(e -> saveKanbanToFile());
 
         infoBox.getChildren().addAll(nameLbl, priceLbl, contactLbl, paidBox);
@@ -203,8 +242,11 @@ public class KanbanController {
         Button delete = new Button("✖");
         delete.setStyle("-fx-background-color: #e74c3c;-fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 9;");
         delete.setOnAction(e -> {
-            column.getChildren().remove(card);
-            saveKanbanToFile();
+            Pane parent = (Pane) card.getParent();
+            if (parent != null) {
+                parent.getChildren().remove(card);
+                saveKanbanToFile();
+            }
         });
         VBox btnBox = new VBox(delete);
         btnBox.setAlignment(Pos.TOP_RIGHT);
@@ -218,19 +260,20 @@ public class KanbanController {
             content.putString("kanban-card");
             db.setContent(content);
             card.setStyle(CARD_DRAGGED_STYLE);
-            card.setUserData(column);
             event.consume();
         });
         card.setOnDragDone(e -> card.setStyle(CARD_STYLE));
 
         card.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                showKanbanCardDialog(card, nameLbl, priceLbl, contactLbl, paidBox, null, contacts, priceLbl.getText(),
-                        card.getUserData() != null ? card.getUserData().toString() : taskText, autosaveOnEdit);
+                String currentContacts = contactLbl.getText().replaceFirst("Контакты: ", "");
+                String currentName = nameLbl.getText().replaceFirst("Имя: ", "");
+                String currentPrice = priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", "");
+                String currentTask = card.getAccessibleText() == null ? "" : card.getAccessibleText();
+                showKanbanCardDialog(card, nameLbl, priceLbl, contactLbl, paidBox, null, currentContacts, currentPrice, currentTask);
             }
         });
 
-        card.setUserData(contacts + "|" + price + "|" + taskText + "|" + (paid ? "1" : "0"));
         card.setAccessibleText(taskText);
 
         return card;
@@ -250,18 +293,11 @@ public class KanbanController {
             boolean success = false;
             if (db.hasString()) {
                 HBox card = (HBox) event.getGestureSource();
-                VBox fromColumn = (VBox) card.getUserData();
-                if (fromColumn != null) {
-                    fromColumn.getChildren().remove(card);
-                }
-                if (addTodoCardButton != null && column == todoColumn && column.getChildren().contains(addTodoCardButton)) {
-                    int btnIdx = column.getChildren().indexOf(addTodoCardButton);
-                    column.getChildren().add(btnIdx, card);
-                } else {
-                    column.getChildren().add(card);
-                }
-                success = true;
+                Pane parent = (Pane) card.getParent();
+                if (parent != null) parent.getChildren().remove(card);
+                column.getChildren().add(card); // всегда в конец
                 saveKanbanToFile();
+                success = true;
             }
             event.setDropCompleted(success);
             wrapper.setStyle("");
@@ -269,7 +305,109 @@ public class KanbanController {
         });
     }
 
-    // По двойному клику: полное редактирование карточки
+    private void setupArchiveDnD(StackPane archiveArea) {
+        archiveArea.setOnDragOver(event -> {
+            if (event.getGestureSource() != archiveArea && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+                archiveArea.setStyle(ARCHIVE_DRAG_OVER);
+            }
+            event.consume();
+        });
+        archiveArea.setOnDragExited(e -> archiveArea.setStyle("-fx-background-color: #3498db; -fx-background-radius: 27;"));
+        archiveArea.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                HBox card = (HBox) event.getGestureSource();
+                Pane parent = (Pane) card.getParent();
+                if (parent != null) {
+                    parent.getChildren().remove(card);
+                    saveCardToArchiveFile(card);
+                    removeCardFromKanbanFile(card);
+                }
+                success = true;
+            }
+            event.setDropCompleted(success);
+            archiveArea.setStyle("-fx-background-color: #3498db; -fx-background-radius: 27;");
+            event.consume();
+        });
+    }
+
+    // Сохраняем карточку в файл-архив
+    private void saveCardToArchiveFile(HBox card) {
+        try {
+            File file = new File(ru.fixbyte.model.CompanySettings.getKanbanArchivePath());
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) parentDir.mkdirs();
+
+            VBox infoBox = (VBox) card.getChildren().get(1);
+            Label nameLbl = (Label) infoBox.getChildren().get(0);
+            Label priceLbl = (Label) infoBox.getChildren().get(1);
+            Label contactLbl = (Label) infoBox.getChildren().get(2);
+            CheckBox paidBox = (CheckBox) infoBox.getChildren().get(3);
+
+            String name = nameLbl.getText().replaceFirst("Имя: ","");
+            String price = priceLbl.getText().replaceFirst("Цена: ","").replace(" руб.","");
+            String contacts = contactLbl.getText().replaceFirst("Контакты: ","");
+            String paid = paidBox.isSelected() ? "1" : "0";
+            String task = card.getAccessibleText() != null ? card.getAccessibleText() : "";
+
+            try (PrintWriter writer = new PrintWriter(new java.io.FileOutputStream(file, true), true, java.nio.charset.StandardCharsets.UTF_8)) {
+                writer.println(
+                        escapeKanban(name) + "|" +
+                                escapeKanban(contacts) + "|" +
+                                escapeKanban(price) + "|" +
+                                escapeKanban(task) + "|" +
+                                paid
+                );
+            }
+        } catch (Exception ex) {
+            showError("Ошибка архивации карточки: " + ex.getMessage());
+        }
+    }
+
+    // Удаляем строку карточки из kanban-файла после архивации
+    private void removeCardFromKanbanFile(HBox card) {
+        try {
+            File file = new File(ru.fixbyte.model.CompanySettings.getKanbanSavePath());
+            if (!file.exists()) return;
+
+            VBox infoBox = (VBox) card.getChildren().get(1);
+            Label nameLbl = (Label) infoBox.getChildren().get(0);
+            Label priceLbl = (Label) infoBox.getChildren().get(1);
+            Label contactLbl = (Label) infoBox.getChildren().get(2);
+            CheckBox paidBox = (CheckBox) infoBox.getChildren().get(3);
+
+            String name = escapeKanban(nameLbl.getText().replaceFirst("Имя: ",""));
+            String contacts = escapeKanban(contactLbl.getText().replaceFirst("Контакты: ",""));
+            String price = escapeKanban(priceLbl.getText().replaceFirst("Цена: ","").replace(" руб.",""));
+            String task = escapeKanban(card.getAccessibleText() == null ? "" : card.getAccessibleText());
+            String paid = paidBox.isSelected() ? "1" : "0";
+
+            java.util.List<String> allLines = java.nio.file.Files.readAllLines(file.toPath(), java.nio.charset.StandardCharsets.UTF_8);
+            String toRemove = null;
+            for (String line : allLines) {
+                String[] sp = line.split("\\|");
+                if (sp.length >= 6
+                        && sp[1].equals(name)
+                        && sp[2].equals(contacts)
+                        && sp[3].equals(price)
+                        && sp[4].equals(task)
+                        && sp[5].equals(paid)) {
+                    toRemove = line;
+                    break;
+                }
+            }
+            if (toRemove != null) {
+                allLines.remove(toRemove);
+                java.nio.file.Files.write(file.toPath(), allLines, java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception ex) {
+            showError("Ошибка удаления из Kanban-файла: " + ex.getMessage());
+        }
+    }
+
+    // ---- Главный фикс: saveKanbanToFile() всегда вызывается после изменения карточки ----
     private void showKanbanCardDialog(
             HBox card,
             Label nameLbl,
@@ -279,8 +417,7 @@ public class KanbanController {
             Label taskLbl,
             String contacts,
             String price,
-            String taskText,
-            boolean autosaveOnEdit) {
+            String taskText) {
 
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Карточка задачи");
@@ -358,14 +495,21 @@ public class KanbanController {
                 String newTask = taskArea.getText();
                 if (taskLbl != null) taskLbl.setText("Задача: " + newTask);
                 card.setAccessibleText(newTask);
-                card.setUserData(contactsField.getText() + "|" + priceField.getText() + "|" + newTask + "|" + (dialogPaidBox.isSelected() ? "1" : "0"));
-                if (autosaveOnEdit) saveKanbanToFile();
+                // ---- Сразу после любого изменения - сохранить! ----
+                saveKanbanToFile();
             }
         });
     }
 
-    private void showError(String msg) {
-        System.err.println(msg);
-        // Можно сделать алерт через JavaFX, если необходимо
+    private void showError(String message) {
+
+        javafx.application.Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
+
     }
 }

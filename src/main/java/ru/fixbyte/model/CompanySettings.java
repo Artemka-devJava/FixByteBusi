@@ -95,6 +95,9 @@ public class CompanySettings {
             e.printStackTrace();
         }
     }
+    public static String getKanbanArchivePath() {
+        return "data/kanban-archive.txt";
+    }
 
     // --- Геттеры ---
     public static String getCompanyName() { return companyName; }

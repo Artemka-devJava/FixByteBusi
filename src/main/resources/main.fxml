@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.image.ImageView?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="ru.fixbyte.controller.MainController" prefHeight="600.0" prefWidth="800.0">
+            fx:controller="ru.fixbyte.controller.MainController"
+            prefHeight="600.0" prefWidth="800.0">
 
     <!-- Верхняя панель -->
     <top>
@@ -95,46 +95,53 @@
                           AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
                           AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                           style="-fx-padding: 26 0 26 0; -fx-alignment: center;">
-                        <!-- Колонка Задачи -->
+                        <!-- Колонка Задачи (TODO) -->
                         <StackPane fx:id="todoWrap"
                                    prefWidth="390" maxWidth="390" minWidth="390"
                                    style="-fx-background-color: #f8f9fa; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
-                            <VBox prefWidth="370" maxWidth="370" minWidth="370"
-                                  style="-fx-background-color: transparent; -fx-padding: 0 0 0 0;">
-                                <!-- Заголовок! -->
-                                <Label text="Задачи"
-                                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-padding: 0 0 9 0;"/>
-                                <!-- Кнопка создания всегда рендерится! -->
-                                <Button fx:id="addTodoCardButton"
-                                        text="Добавить карточку"
-                                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8;"/>
-                                <!-- Здесь будут карточки из todoColumn (VBox с fx:id="todoColumn" ниже) -->
-                                <VBox fx:id="todoColumn" spacing="11"/>
-                            </VBox>
+                            <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                <VBox fx:id="todoColumn" spacing="11">
+                                    <Label text="Задачи"
+                                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-padding: 0 0 9 0;"/>
+                                    <Button fx:id="addTodoCardButton"
+                                            text="Добавить карточку"
+                                            style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8;"/>
+                                    <!-- Карточки будут добавляться программно после кнопки -->
+                                </VBox>
+                            </ScrollPane>
                         </StackPane>
-                        <!-- Колонка В работе -->
+                        <!-- Колонка В работе (IN PROGRESS) -->
                         <StackPane fx:id="inProgressWrap"
                                    prefWidth="390" maxWidth="390" minWidth="390"
                                    style="-fx-background-color: #e3f2fd; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
-                            <VBox prefWidth="370" maxWidth="370" minWidth="370"
-                                  style="-fx-background-color: transparent; -fx-padding: 0 0 0 0;">
-                                <Label text="В работе"
-                                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db; -fx-padding: 0 0 9 0;"/>
-                                <VBox fx:id="inProgressColumn" spacing="11"/>
-                            </VBox>
+                            <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                <VBox fx:id="inProgressColumn" spacing="11">
+                                    <Label text="В работе"
+                                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db; -fx-padding: 0 0 9 0;"/>
+                                    <!-- Карточки будут добавляться программно -->
+                                </VBox>
+                            </ScrollPane>
                         </StackPane>
-                        <!-- Колонка Готово -->
+                        <!-- Колонка Готово (DONE) -->
                         <StackPane fx:id="doneWrap"
                                    prefWidth="390" maxWidth="390" minWidth="390"
                                    style="-fx-background-color: #e8f5e9; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
-                            <VBox prefWidth="370" maxWidth="370" minWidth="370"
-                                  style="-fx-background-color: transparent; -fx-padding: 0 0 0 0;">
-                                <Label text="Готово"
-                                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-padding: 0 0 9 0;"/>
-                                <VBox fx:id="doneColumn" spacing="11"/>
-                            </VBox>
+                            <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                <VBox fx:id="doneColumn" spacing="11">
+                                    <Label text="Готово"
+                                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-padding: 0 0 9 0;"/>
+                                    <!-- Карточки будут добавляться программно -->
+                                </VBox>
+                            </ScrollPane>
                         </StackPane>
                     </HBox>
+                    <!-- МАЛЕНЬКАЯ ЗОНА АРХИВА - размерами и видом как кнопка! -->
+                    <StackPane fx:id="archiveArea"
+                               AnchorPane.rightAnchor="26.0" AnchorPane.bottomAnchor="32.0"
+                               prefWidth="80" prefHeight="40"
+                               style="-fx-background-color: #3498db; -fx-background-radius: 27;">
+                        <Label text="⬇ Архив" style="-fx-font-size:13px; -fx-font-weight:bold; -fx-text-fill:#393939;" />
+                    </StackPane>
                 </AnchorPane>
             </Tab>
         </TabPane>

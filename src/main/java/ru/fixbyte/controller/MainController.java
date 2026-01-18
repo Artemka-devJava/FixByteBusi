@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.scene.layout.*;
+import ru.fixbyte.kanban.controller.KanbanController;
 import ru.fixbyte.model.Product;
 import ru.fixbyte.model.ReceiptItem;
 import ru.fixbyte.model.CompanySettings;
@@ -55,7 +56,9 @@ public class MainController {
     @FXML private StackPane todoWrap;
     @FXML private StackPane inProgressWrap;
     @FXML private StackPane doneWrap;
-
+    @FXML private VBox archiveColumn;
+    @FXML private StackPane archiveWrap;
+    @FXML private StackPane archiveArea;
     // --- Вспомогательные контроллеры ---
     private KanbanController kanbanController;
     private DatabaseManager dbManager;
@@ -87,7 +90,7 @@ public class MainController {
         // --- Kanban Controller интеграция ---
         kanbanController = new KanbanController(
                 todoColumn, inProgressColumn, doneColumn,
-                addTodoCardButton, todoWrap, inProgressWrap, doneWrap
+                addTodoCardButton, todoWrap, inProgressWrap, doneWrap, archiveArea
         );
     }
 
