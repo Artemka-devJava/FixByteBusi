@@ -70,7 +70,7 @@ public class SettingsController {
             CompanySettings.setInn(innField.getText());
             CompanySettings.setLogoPath(logoPathField.getText());
 
-            int width = 800, height = 600;
+            int width = 1400, height = 900;
             try { width = Integer.parseInt(windowWidthField.getText()); } catch (NumberFormatException ignored) {}
             try { height = Integer.parseInt(windowHeightField.getText()); } catch (NumberFormatException ignored) {}
             CompanySettings.setWindowSize(width, height);
