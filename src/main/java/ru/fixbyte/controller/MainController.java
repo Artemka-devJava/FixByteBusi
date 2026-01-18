@@ -125,7 +125,10 @@ public class MainController {
                 todoColumn, inProgressColumn, doneColumn,
                 addTodoCardButton, todoWrap, inProgressWrap, doneWrap, archiveArea
         );
-        YandexMetrikaService metrikaService = new YandexMetrikaService("0daa1a75619d4ca695007e0dc4e6fb59", "24ee923c1dc0448d83075e785503c06c");
+        YandexMetrikaService metrikaService = new YandexMetrikaService(
+                "y0__xCN_6a9BRijgT0g3PPMjharbw5qpsLnjebIcuqW5xfpily7Vg", // ваш access_token
+                "106195489" // ID счетчика
+        );
         YandexMetrikaTabController metrikaTab = new YandexMetrikaTabController(metrikaService);
         tabPane.getTabs().add(metrikaTab.tab);
     }
