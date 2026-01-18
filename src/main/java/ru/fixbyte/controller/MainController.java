@@ -16,6 +16,8 @@ import ru.fixbyte.model.Product;
 import ru.fixbyte.model.ReceiptItem;
 import ru.fixbyte.model.CompanySettings;
 import ru.fixbyte.database.DatabaseManager;
+import ru.fixbyte.monitoring.metrika.YandexMetrikaService;
+import ru.fixbyte.monitoring.metrika.YandexMetrikaTabController;
 import ru.fixbyte.view.AboutDialog;
 import ru.fixbyte.view.ReceiptPrinter;
 import ru.fixbyte.view.ReceiptTextBuilder;
@@ -86,10 +88,14 @@ public class MainController {
     private StackPane archiveWrap;
     @FXML
     private StackPane archiveArea;
+
+    @FXML
+    private TabPane tabPane; // fx:id должен совпадать!
     // --- Вспомогательные контроллеры ---
     private KanbanController kanbanController;
     private DatabaseManager dbManager;
     private ObservableList<ReceiptItem> receiptItems;
+
 
     @FXML
     public void initialize() {
@@ -119,6 +125,9 @@ public class MainController {
                 todoColumn, inProgressColumn, doneColumn,
                 addTodoCardButton, todoWrap, inProgressWrap, doneWrap, archiveArea
         );
+        YandexMetrikaService metrikaService = new YandexMetrikaService("0daa1a75619d4ca695007e0dc4e6fb59", "24ee923c1dc0448d83075e785503c06c");
+        YandexMetrikaTabController metrikaTab = new YandexMetrikaTabController(metrikaService);
+        tabPane.getTabs().add(metrikaTab.tab);
     }
 
     // ---- КАССА ----
