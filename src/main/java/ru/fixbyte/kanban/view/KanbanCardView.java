@@ -16,9 +16,16 @@ public class KanbanCardView extends HBox {
     private final VBox infoBox;
     private String taskText;
 
-    private final Runnable onDelete;
-    private final Runnable onEdit;
-    private final Runnable onChanged;
+    private Runnable onDelete, onEdit, onChanged;
+
+    private static final String CARD_STYLE =
+            "-fx-background-color: linear-gradient(to bottom,#ecf0f1 75%,#fbfbfb);"
+                    + " -fx-padding: 16 18 16 18; -fx-background-radius: 12;"
+                    + " -fx-border-color: #dadee3; -fx-border-radius: 12;"
+                    + " -fx-effect: dropshadow(two-pass-box,#b0bec5,2,0,0,2);";
+    private static final String CARD_DRAGGED_STYLE =
+            "-fx-background-color: #fffde7; -fx-padding: 16 18 16 18;"
+                    + " -fx-background-radius: 12; -fx-border-color: #fbc02d; -fx-border-radius: 12;";
 
     public KanbanCardView(KanbanCardModel model, Runnable onDelete, Runnable onEdit, Runnable onChanged) {
         super(16);
@@ -38,11 +45,16 @@ public class KanbanCardView extends HBox {
         infoBox = new VBox(6);
         infoBox.setPrefWidth(170);
 
-        nameLbl = new Label("Имя: " + model.name);
+        String nameSafe = model.name == null ? "" : model.name;
+        String priceSafe = model.price == null ? "" : model.price;
+        String contactsSafe = model.contacts == null ? "" : model.contacts;
+        String taskSafe = model.task == null ? "" : model.task;
+
+        nameLbl = new Label("Имя: " + nameSafe);
         nameLbl.setStyle("-fx-font-family:'Arial';-fx-font-weight:bold;-fx-font-size: 15; -fx-text-fill: #34495e;");
-        priceLbl = new Label("Цена: " + model.price + " руб.");
+        priceLbl = new Label("Цена: " + priceSafe + " руб.");
         priceLbl.setStyle("-fx-font-family:'Arial';-fx-text-fill: #27ae60;-fx-font-size: 14;");
-        contactLbl = new Label("Контакты: " + model.contacts);
+        contactLbl = new Label("Контакты: " + contactsSafe);
         contactLbl.setStyle("-fx-font-family:'Arial';-fx-text-fill: #888;-fx-font-size: 13;");
         paidBox = new CheckBox("Оплачено");
         paidBox.setSelected(model.paid);
@@ -61,8 +73,8 @@ public class KanbanCardView extends HBox {
         getChildren().addAll(iconView, infoBox, btnBox);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-        setAccessibleText(model.task);
-        this.taskText = model.task;
+        setAccessibleText(taskSafe);
+        this.taskText = taskSafe;
 
         setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && onEdit != null) onEdit.run();
@@ -79,43 +91,58 @@ public class KanbanCardView extends HBox {
     }
 
     public void updateFromModel(KanbanCardModel model) {
-        nameLbl.setText("Имя: " + model.name);
-        priceLbl.setText("Цена: " + model.price + " руб.");
-        contactLbl.setText("Контакты: " + model.contacts);
+        String nameSafe = model.name == null ? "" : model.name;
+        String priceSafe = model.price == null ? "" : model.price;
+        String contactsSafe = model.contacts == null ? "" : model.contacts;
+        String taskSafe = model.task == null ? "" : model.task;
+
+        nameLbl.setText("Имя: " + nameSafe);
+        priceLbl.setText("Цена: " + priceSafe + " руб.");
+        contactLbl.setText("Контакты: " + contactsSafe);
         paidBox.setSelected(model.paid);
-        setAccessibleText(model.task);
-        this.taskText = model.task;
+        setAccessibleText(taskSafe);
+        this.taskText = taskSafe;
     }
 
     // Всегда требует column как параметр!
     public KanbanCardModel toModelWithColumn(String column) {
+        String name = nameLbl.getText().replaceFirst("Имя: ", "");
+        String price = priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", "");
+        String contacts = contactLbl.getText().replaceFirst("Контакты: ", "");
+        String task = getAccessibleText() == null ? "" : getAccessibleText(); // <-- ОБЪЯВЛЕНО!
+
+        if (name == null) name = "";
+        if (price == null) price = "";
+        if (contacts == null) contacts = "";
+        if (task == null) task = "";
+
         return new KanbanCardModel(
                 column,
-                nameLbl.getText().replaceFirst("Имя: ", ""),
-                contactLbl.getText().replaceFirst("Контакты: ", ""),
-                priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", ""),
+                name,
+                contacts,
+                price,
+                task,                // <-- теперь переменная объявлена!
                 paidBox.isSelected()
         );
     }
 
     // Геттеры для диалога редактирования
-    public String getNameValue() { return nameLbl.getText().replaceFirst("Имя: ", ""); }
-    public String getContactsValue() { return contactLbl.getText().replaceFirst("Контакты: ", ""); }
-    public String getPriceValue() { return priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", ""); }
+    public String getNameValue() {
+        String name = nameLbl.getText().replaceFirst("Имя: ", "");
+        return name == null ? "" : name;
+    }
+    public String getContactsValue() {
+        String contacts = contactLbl.getText().replaceFirst("Контакты: ", "");
+        return contacts == null ? "" : contacts;
+    }
+    public String getPriceValue() {
+        String price = priceLbl.getText().replaceFirst("Цена: ", "").replace(" руб.", "");
+        return price == null ? "" : price;
+    }
     public boolean isPaidValue() { return paidBox.isSelected(); }
     public String getTaskValue() { return taskText == null ? "" : taskText; }
     public void setTaskValue(String t) {
-        this.taskText = t;
-        setAccessibleText(t);
+        this.taskText = t == null ? "" : t;
+        setAccessibleText(this.taskText);
     }
-
-    // Стили
-    private static final String CARD_STYLE =
-            "-fx-background-color: linear-gradient(to bottom,#ecf0f1 75%,#fbfbfb);"
-                    + " -fx-padding: 16 18 16 18; -fx-background-radius: 12;"
-                    + " -fx-border-color: #dadee3; -fx-border-radius: 12;"
-                    + " -fx-effect: dropshadow(two-pass-box,#b0bec5,2,0,0,2);";
-    private static final String CARD_DRAGGED_STYLE =
-            "-fx-background-color: #fffde7; -fx-padding: 16 18 16 18;"
-                    + " -fx-background-radius: 12; -fx-border-color: #fbc02d; -fx-border-radius: 12;";
 }

@@ -58,7 +58,7 @@ public class KanbanController {
         restoreHeaderAndAddButton();
 
         addTodoCardButton.setOnAction(e ->
-                addCardToList(todoColumn, new KanbanCardModel("todo", "Новое имя", "Контакты", "0.00", false)));
+                addCardToList(todoColumn, new KanbanCardModel("todo", "Новое имя", "Контакты", "0.00","Новое задание", false)));
 
         loadKanbanFromFile();
     }

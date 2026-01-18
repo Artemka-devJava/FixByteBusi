@@ -3,6 +3,8 @@ package ru.fixbyte.kanban.service;
 import ru.fixbyte.kanban.model.KanbanCardModel;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class KanbanFileService {
@@ -21,7 +23,7 @@ public class KanbanFileService {
                 String price = unescape(sp[3]);
                 String task = unescape(sp[4]);
                 boolean paid = "1".equals(sp[5]);
-                result.add(new KanbanCardModel(column, name, contacts, price, paid));
+                result.add(new KanbanCardModel(column, name, contacts, price, task, paid));
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -48,13 +50,18 @@ public class KanbanFileService {
         File parentDir = file.getParentFile();
         if (parentDir != null && !parentDir.exists()) parentDir.mkdirs();
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(file, true), true, StandardCharsets.UTF_8)) {
-            writer.println(escape(card.column) + "|" + escape(card.name) + "|" + escape(card.contacts) + "|" +
-                    escape(card.price) + "|" + escape(card.task) + "|" + (card.paid ? "1" : "0"));
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            writer.println(escape(card.column) + "|" + escape(card.name) + "|" + escape(card.contacts) + "|"
+                    + escape(card.price) + "|" + escape(card.task) + "|" + (card.paid ? "1" : "0") + "|" + now);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private String escape(String s) { return s == null ? "" : s.replace("|", "%7C").replace("\n", "\\n"); }
-    private String unescape(String s) { return s.replace("%7C", "|").replace("\\n", "\n"); }
+    private String escape(String s) {
+        return s == null ? "" : s.replace("|", "%7C").replace("\n", "\\n");
+    }
+    private String unescape(String s) {
+        return s.replace("%7C", "|").replace("\\n", "\n");
+    }
 }
