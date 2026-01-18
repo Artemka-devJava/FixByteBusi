@@ -30,35 +30,62 @@ import java.time.format.DateTimeFormatter;
 
 public class MainController {
     // --- Чек/касса ---
-    @FXML private ComboBox<Product> productComboBox;
-    @FXML private TextField quantityField;
-    @FXML private Button addButton;
-    @FXML private TableView<ReceiptItem> receiptTable;
-    @FXML private TableColumn<ReceiptItem, String> nameColumn;
-    @FXML private TableColumn<ReceiptItem, Double> priceColumn;
-    @FXML private TableColumn<ReceiptItem, Double> quantityColumn;
-    @FXML private TableColumn<ReceiptItem, String> unitColumn;
-    @FXML private TableColumn<ReceiptItem, Double> totalColumn;
-    @FXML private Label totalLabel;
-    @FXML private Label companyNameLabel;
-    @FXML private Button printButton;
-    @FXML private Button clearButton;
-    @FXML private Button manageProductsButton;
-    @FXML private Button settingsButton;
-    @FXML private ImageView logoImageView;
-    @FXML private Button aboutButton;
+    @FXML
+    private ComboBox<Product> productComboBox;
+    @FXML
+    private TextField quantityField;
+    @FXML
+    private Button addButton;
+    @FXML
+    private TableView<ReceiptItem> receiptTable;
+    @FXML
+    private TableColumn<ReceiptItem, String> nameColumn;
+    @FXML
+    private TableColumn<ReceiptItem, Double> priceColumn;
+    @FXML
+    private TableColumn<ReceiptItem, Double> quantityColumn;
+    @FXML
+    private TableColumn<ReceiptItem, String> unitColumn;
+    @FXML
+    private TableColumn<ReceiptItem, Double> totalColumn;
+    @FXML
+    private Label totalLabel;
+    @FXML
+    private Label companyNameLabel;
+    @FXML
+    private Button printButton;
+    @FXML
+    private Button clearButton;
+    @FXML
+    private Button manageProductsButton;
+    @FXML
+    private Button settingsButton;
+    @FXML
+    private ImageView logoImageView;
+    @FXML
+    private Button aboutButton;
 
     // --- Kanban для передачи в KanbanController ---
-    @FXML private VBox todoColumn;
-    @FXML private VBox inProgressColumn;
-    @FXML private VBox doneColumn;
-    @FXML private Button addTodoCardButton;
-    @FXML private StackPane todoWrap;
-    @FXML private StackPane inProgressWrap;
-    @FXML private StackPane doneWrap;
-    @FXML private VBox archiveColumn;
-    @FXML private StackPane archiveWrap;
-    @FXML private StackPane archiveArea;
+    @FXML
+    private VBox todoColumn;
+    @FXML
+    private VBox inProgressColumn;
+    @FXML
+    private VBox doneColumn;
+    @FXML
+    private Button addTodoCardButton;
+    @FXML
+    private StackPane todoWrap;
+    @FXML
+    private StackPane inProgressWrap;
+    @FXML
+    private StackPane doneWrap;
+    @FXML
+    private VBox archiveColumn;
+    @FXML
+    private StackPane archiveWrap;
+    @FXML
+    private StackPane archiveArea;
     // --- Вспомогательные контроллеры ---
     private KanbanController kanbanController;
     private DatabaseManager dbManager;

@@ -115,12 +115,7 @@ public class CompanySettings {
     public static String getKanbanSavePath() { return kanbanSavePath; }
 
     // --- Сеттеры ---
-    public static void setKanbanSavePath(String value) {
-        if (value != null && !value.isEmpty()) {
-            kanbanSavePath = value;
-            saveSettings();
-        }
-    }
+
     public static void setCompanyName(String name) {
         companyName = name;
         saveSettings();
@@ -149,14 +144,8 @@ public class CompanySettings {
         showBuyerSignature = show;
         saveSettings();
     }
-    public static void setWindowWidth(int width) {
-        windowWidth = Math.max(600, Math.min(width, 1920));
-        saveSettings();
-    }
-    public static void setWindowHeight(int height) {
-        windowHeight = Math.max(400, Math.min(height, 1080));
-        saveSettings();
-    }
+
+
     public static void setWindowSize(int width, int height) {
         windowWidth = Math.max(600, Math.min(width, 1920));
         windowHeight = Math.max(400, Math.min(height, 1080));

@@ -8,16 +8,7 @@ import ru.fixbyte.kanban.view.KanbanCardView;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class KanbanColumnView {
-    public final VBox columnBox;
-    public final Label headerLabel;
-    public final Button addButton;
-
-    public KanbanColumnView(VBox columnBox, Label headerLabel, Button addButtonOrNull) {
-        this.columnBox = columnBox;
-        this.headerLabel = headerLabel;
-        this.addButton = addButtonOrNull;
-    }
+public record KanbanColumnView(VBox columnBox, Label headerLabel, Button addButton) {
 
     public void addCard(KanbanCardView card) {
         columnBox.getChildren().add(card); // всегда в конец

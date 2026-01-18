@@ -16,7 +16,9 @@ public class KanbanCardView extends HBox {
     private final VBox infoBox;
     private String taskText;
 
-    private Runnable onDelete, onEdit, onChanged;
+    private final Runnable onDelete;
+    private final Runnable onEdit;
+    private final Runnable onChanged;
 
     public KanbanCardView(KanbanCardModel model, Runnable onDelete, Runnable onEdit, Runnable onChanged) {
         super(16);

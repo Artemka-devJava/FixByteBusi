@@ -9,12 +9,12 @@ import ru.fixbyte.kanban.model.KanbanCardModel;
 
 public class KanbanCardEditDialog {
 
-    private Dialog<ButtonType> dialog;
-    private TextField nameField;
-    private TextField contactsField;
-    private TextField priceField;
-    private TextArea taskArea;
-    private CheckBox paidBox;
+    private final Dialog<ButtonType> dialog;
+    private final TextField nameField;
+    private final TextField contactsField;
+    private final TextField priceField;
+    private final TextArea taskArea;
+    private final CheckBox paidBox;
 
     public KanbanCardEditDialog(KanbanCardModel initial) {
         dialog = new Dialog<>();

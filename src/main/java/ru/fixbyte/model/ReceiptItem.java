@@ -1,7 +1,7 @@
 package ru.fixbyte.model;
 
 public class ReceiptItem {
-    private Product product;
+    private final Product product;
     private double quantity;
     private double total;
 
