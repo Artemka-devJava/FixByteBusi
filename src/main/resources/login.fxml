@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER" spacing="15" style="-fx-padding: 30; -fx-background-color: white;"
+      prefWidth="360" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.fixbyte.auth.LoginController">
+
+    <Label text="Вход в систему" style="-fx-font-weight: bold; -fx-font-size: 20px;" />
+
+    <GridPane hgap="10" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints minWidth="100" prefWidth="110" />
+            <ColumnConstraints minWidth="160" prefWidth="200" />
+        </columnConstraints>
+
+        <Label text="Логин:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <font><Font size="13" /></font>
+        </Label>
+        <TextField fx:id="loginField" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Логин" />
+
+        <Label text="Пароль:" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <font><Font size="13" /></font>
+        </Label>
+        <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Пароль"
+                       onAction="#onLogin" />
+        <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+        </rowConstraints>
+    </GridPane>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;" wrapText="true" />
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Войти" prefWidth="120"
+                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 13;"
+                onAction="#onLogin" />
+        <Button text="Отмена" prefWidth="120"
+                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 13;"
+                onAction="#onCancel" />
+    </HBox>
+</VBox>

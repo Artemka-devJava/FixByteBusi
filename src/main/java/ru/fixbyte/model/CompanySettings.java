@@ -2,6 +2,7 @@ package ru.fixbyte.model;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Properties;
 
 public class CompanySettings {
@@ -21,6 +22,11 @@ public class CompanySettings {
     // --- Новые поля ---
     private static String receiptSaveDir = "";
     private static boolean autoSaveReceipts = true;
+
+    // --- Авторизация ---
+    private static boolean authEnabled = false;
+    private static String login = "admin";
+    private static String passwordHash = "";
 
     // Загрузка настроек из файла
     public static void loadSettings() {
@@ -55,6 +61,11 @@ public class CompanySettings {
                     receiptSaveDir = properties.getProperty("receipt_save_dir", "");
                     autoSaveReceipts = Boolean.parseBoolean(properties.getProperty("auto_save_receipts", "true"));
 
+                    // Авторизация
+                    authEnabled = Boolean.parseBoolean(properties.getProperty("auth_enabled", "false"));
+                    login = properties.getProperty("login", "admin");
+                    passwordHash = properties.getProperty("password_hash", "");
+
                     System.out.println("Настройки загружены из файла");
                 }
             } else {
@@ -86,6 +97,11 @@ public class CompanySettings {
 
             properties.setProperty("kanban_save_path", kanbanSavePath == null ? "" : kanbanSavePath);
 
+            // Авторизация
+            properties.setProperty("auth_enabled", String.valueOf(authEnabled));
+            properties.setProperty("login", login == null ? "admin" : login);
+            properties.setProperty("password_hash", passwordHash == null ? "" : passwordHash);
+
             try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream("settings.properties"), StandardCharsets.UTF_8)) {
                 properties.store(writer, "Company Settings");
                 System.out.println("Настройки сохранены в файл:  settings.properties");
@@ -113,6 +129,22 @@ public class CompanySettings {
     public static String getReceiptSaveDir() { return receiptSaveDir; }
     public static boolean isAutoSaveReceipts() { return autoSaveReceipts; }
     public static String getKanbanSavePath() { return kanbanSavePath; }
+
+    public static boolean isAuthEnabled() { return authEnabled; }
+    public static String getLogin() { return login; }
+    public static String getPasswordHash() { return passwordHash; }
+
+    public static String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
 
     // --- Сеттеры ---
 
@@ -157,6 +189,19 @@ public class CompanySettings {
     }
     public static void setAutoSaveReceipts(boolean enable) {
         autoSaveReceipts = enable;
+        saveSettings();
+    }
+
+    public static void setAuthEnabled(boolean enabled) {
+        authEnabled = enabled;
+        saveSettings();
+    }
+    public static void setLogin(String newLogin) {
+        login = (newLogin == null ? "admin" : newLogin);
+        saveSettings();
+    }
+    public static void setPasswordHash(String hash) {
+        passwordHash = (hash == null ? "" : hash);
         saveSettings();
     }
 }

@@ -27,6 +27,13 @@ public class SettingsController {
     @FXML private Button chooseReceiptDirButton;
     @FXML private CheckBox autoSaveReceiptsBox;
 
+    // Авторизация
+    @FXML private CheckBox authEnabledBox;
+    @FXML private TextField authLoginField;
+    @FXML private PasswordField newPasswordField;
+    @FXML private PasswordField confirmPasswordField;
+    @FXML private Label passwordStatusLabel;
+
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
@@ -46,6 +53,11 @@ public class SettingsController {
 
         receiptDirField.setText(CompanySettings.getReceiptSaveDir());
         autoSaveReceiptsBox.setSelected(CompanySettings.isAutoSaveReceipts());
+
+        // Авторизация
+        authEnabledBox.setSelected(CompanySettings.isAuthEnabled());
+        authLoginField.setText(CompanySettings.getLogin());
+        if (passwordStatusLabel != null) passwordStatusLabel.setText("");
     }
 
     @FXML
@@ -81,7 +93,33 @@ public class SettingsController {
             CompanySettings.setReceiptSaveDir(receiptDirField.getText());
             CompanySettings.setAutoSaveReceipts(autoSaveReceiptsBox.isSelected());
 
+            // Авторизация
+            CompanySettings.setAuthEnabled(authEnabledBox.isSelected());
+            String newLogin = authLoginField.getText().trim();
+            if (!newLogin.isEmpty()) {
+                CompanySettings.setLogin(newLogin);
+            }
+
+            String newPass = newPasswordField.getText();
+            String confirmPass = confirmPasswordField.getText();
+            if (!newPass.isEmpty() || !confirmPass.isEmpty()) {
+                if (!newPass.equals(confirmPass)) {
+                    if (passwordStatusLabel != null) {
+                        passwordStatusLabel.setStyle("-fx-text-fill: red;");
+                        passwordStatusLabel.setText("Пароли не совпадают!");
+                    }
+                    showError("Пароли не совпадают!");
+                    return;
+                }
+                CompanySettings.setPasswordHash(CompanySettings.hashPassword(newPass));
+            }
+
             CompanySettings.saveSettings();
+
+            if (passwordStatusLabel != null) {
+                passwordStatusLabel.setStyle("-fx-text-fill: green;");
+                passwordStatusLabel.setText("Настройки сохранены");
+            }
 
             closeStage();
         } catch (Exception e) {
