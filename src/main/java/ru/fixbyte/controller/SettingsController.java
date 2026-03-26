@@ -21,11 +21,19 @@ public class SettingsController {
 
     @FXML private CheckBox showInnBox;
     @FXML private CheckBox showBuyerSignatureBox;
+    @FXML private CheckBox showReceiptsTabBox;
+    @FXML private CheckBox showKanbanTabBox;
+    @FXML private CheckBox showMetrikaTabBox;
+    @FXML private CheckBox showNotesTabBox;
 
-    // Автосохранение чеков
     @FXML private TextField receiptDirField;
     @FXML private Button chooseReceiptDirButton;
     @FXML private CheckBox autoSaveReceiptsBox;
+
+    // Авторизация
+    @FXML private CheckBox authEnabledBox;
+    @FXML private TextField authLoginField;
+    @FXML private PasswordField authPasswordField;
 
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -43,9 +51,24 @@ public class SettingsController {
 
         showInnBox.setSelected(CompanySettings.isShowInn());
         showBuyerSignatureBox.setSelected(CompanySettings.isShowBuyerSignature());
+        showReceiptsTabBox.setSelected(CompanySettings.isShowReceiptsTab());
+        showKanbanTabBox.setSelected(CompanySettings.isShowKanbanTab());
+        showMetrikaTabBox.setSelected(CompanySettings.isShowMetrikaTab());
+        showNotesTabBox.setSelected(CompanySettings.isShowNotesTab());
 
         receiptDirField.setText(CompanySettings.getReceiptSaveDir());
         autoSaveReceiptsBox.setSelected(CompanySettings.isAutoSaveReceipts());
+
+        authEnabledBox.setSelected(CompanySettings.isAuthEnabled());
+        authLoginField.setText(CompanySettings.getAuthLogin());
+        authPasswordField.setPromptText("Оставьте пустым, чтобы не менять пароль");
+
+        authEnabledBox.selectedProperty().addListener((obs, oldV, newV) -> {
+            authLoginField.setDisable(!newV);
+            authPasswordField.setDisable(!newV);
+        });
+        authLoginField.setDisable(!authEnabledBox.isSelected());
+        authPasswordField.setDisable(!authEnabledBox.isSelected());
     }
 
     @FXML
@@ -70,16 +93,37 @@ public class SettingsController {
             CompanySettings.setInn(innField.getText());
             CompanySettings.setLogoPath(logoPathField.getText());
 
-            int width = 1400, height = 900;
+            int width = 1400;
+            int height = 900;
             try { width = Integer.parseInt(windowWidthField.getText()); } catch (NumberFormatException ignored) {}
             try { height = Integer.parseInt(windowHeightField.getText()); } catch (NumberFormatException ignored) {}
             CompanySettings.setWindowSize(width, height);
 
             CompanySettings.setShowInn(showInnBox.isSelected());
             CompanySettings.setShowBuyerSignature(showBuyerSignatureBox.isSelected());
+            CompanySettings.setShowReceiptsTab(showReceiptsTabBox.isSelected());
+            CompanySettings.setShowKanbanTab(showKanbanTabBox.isSelected());
+            CompanySettings.setShowMetrikaTab(showMetrikaTabBox.isSelected());
+            CompanySettings.setShowNotesTab(showNotesTabBox.isSelected());
 
             CompanySettings.setReceiptSaveDir(receiptDirField.getText());
             CompanySettings.setAutoSaveReceipts(autoSaveReceiptsBox.isSelected());
+
+            // Настройки входа
+            boolean authEnabled = authEnabledBox.isSelected();
+            String login = authLoginField.getText() == null ? "" : authLoginField.getText().trim();
+            if (authEnabled && login.isEmpty()) {
+                showError("При включенной защите логин не может быть пустым");
+                return;
+            }
+            CompanySettings.setAuthEnabled(authEnabled);
+            CompanySettings.setAuthLogin(login.isEmpty() ? CompanySettings.getAuthLogin() : login);
+
+            // Если пароль введен - меняем, иначе оставляем старый
+            String newPassword = authPasswordField.getText();
+            if (newPassword != null && !newPassword.isEmpty()) {
+                CompanySettings.setAuthPasswordPlain(newPassword);
+            }
 
             CompanySettings.saveSettings();
 

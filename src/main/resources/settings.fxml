@@ -92,6 +92,31 @@
                     <CheckBox fx:id="showBuyerSignatureBox" text="Подпись покупателя" />
                 </HBox>
 
+                <Separator />
+
+                <Label style="-fx-font-weight: bold; -fx-font-size: 15px;" text="Видимость вкладок" />
+                <VBox spacing="8">
+                    <CheckBox fx:id="showReceiptsTabBox" text="Показывать вкладку Чеки" />
+                    <CheckBox fx:id="showKanbanTabBox" text="Показывать вкладку Kanban" />
+                    <CheckBox fx:id="showMetrikaTabBox" text="Показывать вкладку Яндекс Метрика" />
+                    <CheckBox fx:id="showNotesTabBox" text="Показывать вкладку Заметки" />
+                </VBox>
+
+                <Separator />
+
+                <Label style="-fx-font-weight: bold; -fx-font-size: 15px;" text="Авторизация при запуске" />
+                <CheckBox fx:id="authEnabledBox" text="Запрашивать логин и пароль при запуске" />
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="150" prefWidth="150" />
+                        <ColumnConstraints minWidth="250" prefWidth="320" />
+                    </columnConstraints>
+                    <Label text="Логин:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <TextField fx:id="authLoginField" promptText="admin" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                    <Label text="Новый пароль:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <PasswordField fx:id="authPasswordField" promptText="Оставьте пустым, чтобы не менять" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                </GridPane>
+
             </VBox>
         </ScrollPane>
     </center>

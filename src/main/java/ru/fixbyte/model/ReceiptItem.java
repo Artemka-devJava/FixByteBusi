@@ -17,6 +17,6 @@ public class ReceiptItem {
 
     public void setQuantity(double quantity) {
         this.quantity = quantity;
-        this.total = product. getPrice() * quantity;
+        this.total = product.getPrice() * quantity;
     }
 }

@@ -37,7 +37,7 @@
         <TabPane fx:id="tabPane">
             <tabs>
                 <!-- Чеки -->
-                <Tab text="Чеки">
+                <Tab fx:id="receiptsTab" text="Чеки">
                     <AnchorPane>
                         <VBox spacing="15" style="-fx-padding: 20;"
                               AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
@@ -92,7 +92,7 @@
                     </AnchorPane>
                 </Tab>
                 <!-- KanBan -->
-                <Tab text="KanBan">
+                <Tab fx:id="kanbanTab" text="KanBan">
                     <AnchorPane>
                         <HBox spacing="20" alignment="CENTER"
                               AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"

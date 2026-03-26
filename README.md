@@ -1,69 +1,88 @@
-# 🧾 FixByteBusi - Товарные чеки
-
-[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/technologies/downloads/)
-[![JavaFX](https://img.shields.io/badge/JavaFX-21.0.6-blue.svg)](https://openjfx.io/)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
-[![Version](https://img.shields.io/badge/Version-0.1.2-green.svg)](https://github.com/Artemka-devJava/FixByteBusi/releases)
-
 # FixByteBusi
 
-**FixByteBusi** — приложение для автоматизации торговли и управления заказами на JavaFX.
+Desktop-приложение на JavaFX для работы с товарами, печати чеков и ведения заказов в формате Kanban.
 
-## Особенности
+## Возможности
 
-- **Товарные чеки и касса**
-   - Добавление товаров в чек, расчет итоговой суммы
-   - Печать и автосохранение чеков
-   - Каталог товаров: добавление/редактирование/удаление
+- управление каталогом товаров (добавление, редактирование, удаление);
+- формирование и печать товарных чеков;
+- Kanban-доска заказов с сохранением карточек;
+- настройки компании и параметров приложения.
 
-- **Kanban-доска заказов**
-   - Перетаскивание карточек по статусам
-   - Карточка содержит: Имя, Контакты, Цена, чекбокс "Оплачено"
-   - Мгновенное сохранение изменений
+## Технологии
 
-- **Гибкие настройки**
-   - Реквизиты, логотип, пути к файлам
+- Java 17
+- JavaFX 21.0.6
+- Maven
+- SQLite (`sqlite-jdbc`)
+- Jackson (`jackson-databind`)
 
-- **Удобный интерфейс на русском языке**
+## Требования
 
----
+- установленный JDK 17+;
+- доступ к Maven (через `mvn` или `mvnw.cmd`, если wrapper восстановлен);
+- Windows (в `pom.xml` используются JavaFX зависимости с `classifier` = `win`).
 
-## Быстрый старт
+## Быстрый старт (PowerShell)
 
-1. Установите **Java 17** или новее
-2. Склонируйте репозиторий:
-   ```
-   git clone https://github.com/Artemka-devJava/FixByteBusi.git
-   ```
-3. Откройте проект в вашей IDE (например, IntelliJ IDEA)
-4. Запустите:
-   - главный класс `ru.fixbyte.FixByteBusiApp`
-   - либо скомпилируйте и запустите `FixByteBusi.jar`
+### 1) Проверка Java
 
----
+```powershell
+java -version
+```
 
-## Основные файлы и директории
+### 2) Сборка проекта
 
-- `src/main/java/ru/fixbyte/controller/` — контроллеры UI
-- `src/main/java/ru/fixbyte/model/` — модели данных
-- `src/main/java/ru/fixbyte/database/` — работа с БД товаров
-- `src/main/resources/` — интерфейс (FXML), иконки, стили
-- `products.db` — файл базы данных товаров
-- `settings.properties` — настройки
+```powershell
+Set-Location C:\Project\FixByteBuss
+mvn clean compile
+```
 
----
+### 3) Запуск приложения в dev-режиме
 
-## Вклад и связи
+```powershell
+Set-Location C:\Project\FixByteBuss
+mvn javafx:run
+```
 
-- Форкните репозиторий, улучшайте и отправляйте Pull Request!
-- Автор: [Artemka-devJava](https://github.com/Artemka-devJava)
-- Email: artem@tarabakin.ru
+## Сборка JAR
 
-## Лицензия
+```powershell
+Set-Location C:\Project\FixByteBuss
+mvn clean package
+java -jar .\target\FixByteBusi-1.0.jar
+```
 
-MIT License
+> Точка входа приложения: `ru.fixbyte.Launcher`.
 
----
+## Maven Wrapper
 
-**FixByteBusi — быстрый старт для вашего бизнеса.  
-Идеи и предложения всегда приветствуются!**
+Если команда `./mvnw` или `.\mvnw.cmd` не работает и сообщает про отсутствие `.mvn\wrapper\maven-wrapper.properties`, используйте системный Maven (`mvn`) или восстановите wrapper:
+
+```powershell
+Set-Location C:\Project\FixByteBuss
+mvn -N wrapper:wrapper
+```
+
+После восстановления можно использовать:
+
+```powershell
+Set-Location C:\Project\FixByteBuss
+.\mvnw.cmd clean compile
+```
+
+## Структура проекта
+
+- `src/main/java/ru/fixbyte/controller/` - контроллеры JavaFX;
+- `src/main/java/ru/fixbyte/model/` - модели данных;
+- `src/main/java/ru/fixbyte/database/` - работа с SQLite;
+- `src/main/java/ru/fixbyte/kanban/` - Kanban (model/view/controller/service);
+- `src/main/resources/` - FXML и ресурсы интерфейса;
+- `settings.properties` - настройки приложения;
+- `data/cards.txt` - данные Kanban-карточек;
+- `products.db` / `data/products.db` - файлы базы данных.
+
+## Примечания
+
+- для установки артефакта в локальный репозиторий запускайте lifecycle-команду `mvn install`, а не plugin goal `maven-install-plugin:install`;
+- предупреждения про `sun.misc.Unsafe` в Maven (из библиотек IntelliJ) обычно не блокируют сборку.
