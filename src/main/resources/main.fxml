@@ -1,91 +1,155 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
 
-<?import javafx.scene.text.Font?>
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="ru.fixbyte.controller.MainController" prefHeight="600.0" prefWidth="800.0">
+            fx:controller="ru.fixbyte.controller.MainController"
+            prefHeight="600.0" prefWidth="800.0">
 
     <!-- Верхняя панель -->
     <top>
-        <VBox spacing="10" style="-fx-background-color:  #2c3e50; -fx-padding: 15;">
-            <Label text="Товарный чек" textFill="white">
-                <font>
-                    <Font name="Arial Bold" size="24"/>
-                </font>
-            </Label>
-        </VBox>
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: rgb(230,233,237); -fx-padding: 15;">
+            <VBox alignment="CENTER">
+                <ImageView fx:id="logoImageView" fitWidth="60" fitHeight="60" preserveRatio="true"/>
+            </VBox>
+            <VBox alignment="CENTER_LEFT">
+                <Label text="Товарный чек" textFill="#000000">
+                    <font>
+                        <Font name="Arial Bold" size="24"/>
+                    </font>
+                </Label>
+                <Label fx:id="companyNameLabel" text="Название компании" textFill="#000000">
+                    <font>
+                        <Font name="Arial" size="12"/>
+                    </font>
+                </Label>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="settingsButton" text="⚙ Настройки" prefWidth="130"
+                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14;"/>
+        </HBox>
     </top>
 
-    <!-- Центральная часть -->
     <center>
-        <VBox spacing="15" style="-fx-padding: 20;">
+        <TabPane fx:id="tabPane">
+            <tabs>
+                <!-- Чеки -->
+                <Tab fx:id="receiptsTab" text="Чеки">
+                    <AnchorPane>
+                        <VBox spacing="15" style="-fx-padding: 20;"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <HBox spacing="10" alignment="CENTER_LEFT"
+                                  style="-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-background-radius: 5;">
+                                <Label text="Товар:" prefWidth="80">
+                                    <font>
+                                        <Font size="14"/>
+                                    </font>
+                                </Label>
+                                <ComboBox fx:id="productComboBox" prefWidth="300" promptText="Выберите товар"/>
+                                <Label text="Количество:" prefWidth="100">
+                                    <font>
+                                        <Font size="14"/>
+                                    </font>
+                                </Label>
+                                <TextField fx:id="quantityField" prefWidth="100" promptText="0.00"/>
+                                <Button fx:id="addButton" text="Добавить" prefWidth="100"
+                                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="manageProductsButton" text="Управление товарами"
+                                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14;"/>
+                            </HBox>
 
-            <!-- Панель добавления товара -->
-            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-background-radius: 5;">
-                <Label text="Товар:" prefWidth="80">
-                    <font>
-                        <Font size="14"/>
-                    </font>
-                </Label>
-                <ComboBox fx:id="productComboBox" prefWidth="300" promptText="Выберите товар"/>
+                            <TableView fx:id="receiptTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="nameColumn" text="Наименование" prefWidth="250"/>
+                                    <TableColumn fx:id="priceColumn" text="Цена" prefWidth="100"/>
+                                    <TableColumn fx:id="quantityColumn" text="Количество" prefWidth="100"/>
+                                    <TableColumn fx:id="unitColumn" text="Ед. изм." prefWidth="80"/>
+                                    <TableColumn fx:id="totalColumn" text="Сумма" prefWidth="120"/>
+                                </columns>
+                            </TableView>
 
-                <Label text="Количество:" prefWidth="100">
-                    <font>
-                        <Font size="14"/>
-                    </font>
-                </Label>
-                <TextField fx:id="quantityField" prefWidth="100" promptText="0. 00"/>
+                            <HBox spacing="15" alignment="CENTER_RIGHT"
+                                  style="-fx-background-color: #34495e; -fx-padding: 15; -fx-background-radius: 5;">
+                                <Label fx:id="totalLabel" text="Итого: 0.00 руб." textFill="white">
+                                    <font>
+                                        <Font name="Arial Bold" size="18"/>
+                                    </font>
+                                </Label>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="aboutButton" text="О программе" onAction="#onAbout"
+                                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14;"/>
+                                <Button fx:id="clearButton" text="Очистить" prefWidth="120"
+                                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14;"/>
+                                <Button fx:id="printButton" text="Печать" prefWidth="120"
+                                        style="-fx-background-color: #16a085; -fx-text-fill: white; -fx-font-size: 14;"/>
+                            </HBox>
+                        </VBox>
+                    </AnchorPane>
+                </Tab>
+                <!-- KanBan -->
+                <Tab fx:id="kanbanTab" text="KanBan">
+                    <AnchorPane>
+                        <HBox spacing="20" alignment="CENTER"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                              style="-fx-padding: 26 0 26 0; -fx-alignment: center;">
+                            <!-- Колонка Задачи (TODO) -->
+                            <StackPane fx:id="todoWrap"
+                                       prefWidth="390" maxWidth="390" minWidth="390"
+                                       style="-fx-background-color: #f8f9fa; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
+                                <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                    <VBox fx:id="todoColumn" spacing="11">
+                                        <Label text="Задачи"
+                                               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-padding: 0 0 9 0;"/>
+                                        <Button fx:id="addTodoCardButton"
+                                                text="Добавить карточку"
+                                                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8;"/>
+                                        <!-- Карточки будут добавляться программно после кнопки -->
+                                    </VBox>
+                                </ScrollPane>
+                            </StackPane>
+                            <!-- Колонка В работе (IN PROGRESS) -->
+                            <StackPane fx:id="inProgressWrap"
+                                       prefWidth="390" maxWidth="390" minWidth="390"
+                                       style="-fx-background-color: #e3f2fd; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
+                                <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                    <VBox fx:id="inProgressColumn" spacing="11">
+                                        <Label text="В работе"
+                                               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db; -fx-padding: 0 0 9 0;"/>
+                                        <!-- Карточки будут добавляться программно -->
+                                    </VBox>
+                                </ScrollPane>
+                            </StackPane>
+                            <!-- Колонка Готово (DONE) -->
+                            <StackPane fx:id="doneWrap"
+                                       prefWidth="390" maxWidth="390" minWidth="390"
+                                       style="-fx-background-color: #e8f5e9; -fx-background-radius: 13; -fx-padding: 18 5 18 5; -fx-min-height: 290;">
+                                <ScrollPane fitToWidth="true" style="-fx-background-color:transparent;">
+                                    <VBox fx:id="doneColumn" spacing="11">
+                                        <Label text="Готово"
+                                               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-padding: 0 0 9 0;"/>
+                                        <!-- Карточки будут добавляться программно -->
+                                    </VBox>
+                                </ScrollPane>
+                            </StackPane>
+                        </HBox>
+                        <!-- МАЛЕНЬКАЯ ЗОНА АРХИВА - размерами и видом как кнопка! -->
+                        <StackPane fx:id="archiveArea"
+                                   AnchorPane.rightAnchor="26.0" AnchorPane.bottomAnchor="32.0"
+                                   prefWidth="80" prefHeight="40"
+                                   style="-fx-background-color: #3498db; -fx-background-radius: 27;">
+                            <Label text="⬇ Архив" style="-fx-font-size:13px; -fx-font-weight:bold; -fx-text-fill:#393939;" />
+                        </StackPane>
+                    </AnchorPane>
+                </Tab>
+                <!-- Вкладка Яндекс Метрика -->
 
-                <Button fx:id="addButton" text="Добавить" prefWidth="100"
-                        style="-fx-background-color:  #27ae60; -fx-text-fill: white; -fx-font-size: 14;">
-                </Button>
-
-                <Region HBox.hgrow="ALWAYS"/>
-
-                <Button fx:id="manageProductsButton" text="Управление товарами"
-                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12;">
-                </Button>
-            </HBox>
-
-            <!-- Таблица чека -->
-            <TableView fx:id="receiptTable" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="nameColumn" text="Наименование" prefWidth="250"/>
-                    <TableColumn fx:id="priceColumn" text="Цена" prefWidth="100"/>
-                    <TableColumn fx:id="quantityColumn" text="Количество" prefWidth="100"/>
-                    <TableColumn fx:id="unitColumn" text="Ед. изм." prefWidth="80"/>
-                    <TableColumn fx:id="totalColumn" text="Сумма" prefWidth="120"/>
-                </columns>
-            </TableView>
-
-            <!-- Нижняя панель с итогом -->
-            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-background-color: #34495e; -fx-padding:  15; -fx-background-radius: 5;">
-                <Label fx:id="totalLabel" text="Итого:  0.00 руб." textFill="white">
-                    <font>
-                        <Font name="Arial Bold" size="18"/>
-                    </font>
-                </Label>
-
-                <Region HBox.hgrow="ALWAYS"/>
-                <!-- В секции с кнопками -->
-                <Button fx:id="settingsButton" text="⚙ Настройки"
-                        style="-fx-background-color:  #9b59b6; -fx-text-fill: white; -fx-font-size: 14;">
-                </Button>
-
-                <Button fx:id="clearButton" text="Очистить" prefWidth="120"
-                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14;">
-                </Button>
-
-                <Button fx:id="printButton" text="Печать" prefWidth="120"
-                        style="-fx-background-color: #16a085; -fx-text-fill: white; -fx-font-size: 14;">
-                </Button>
-            </HBox>
-
-        </VBox>
+            </tabs>
+        </TabPane>
     </center>
-
 </BorderPane>

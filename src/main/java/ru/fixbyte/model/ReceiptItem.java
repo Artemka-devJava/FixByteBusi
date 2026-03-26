@@ -1,7 +1,7 @@
 package ru.fixbyte.model;
 
 public class ReceiptItem {
-    private Product product;
+    private final Product product;
     private double quantity;
     private double total;
 
@@ -17,6 +17,6 @@ public class ReceiptItem {
 
     public void setQuantity(double quantity) {
         this.quantity = quantity;
-        this.total = product. getPrice() * quantity;
+        this.total = product.getPrice() * quantity;
     }
 }

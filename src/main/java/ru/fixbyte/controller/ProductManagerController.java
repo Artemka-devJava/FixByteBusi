@@ -4,13 +4,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx. scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.PropertyValueFactory;
 import ru.fixbyte.model.Product;
 import ru.fixbyte.database.DatabaseManager;
 
 import java.sql.SQLException;
 
 public class ProductManagerController {
+
     @FXML private TextField nameField;
     @FXML private TextField priceField;
     @FXML private ComboBox<String> unitComboBox;
@@ -35,35 +36,25 @@ public class ProductManagerController {
         dbManager = new DatabaseManager();
         products = FXCollections.observableArrayList();
 
-        // Настройка комбобокса единиц измерения
-        unitComboBox.setItems(FXCollections.observableArrayList(
-                "шт", "кг", "л", "м", "упак", "г", "мл"
-        ));
+        unitComboBox.setItems(FXCollections.observableArrayList("шт", "кг", "л", "м", "упак", "г", "мл"));
         unitComboBox.getSelectionModel().selectFirst();
 
-        // Настройка таблицы
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         priceColumn.setCellValueFactory(new PropertyValueFactory<>("price"));
         unitColumn.setCellValueFactory(new PropertyValueFactory<>("unit"));
 
         productsTable.setItems(products);
-
-        // Загрузка товаров
         loadProducts();
 
-        // Обработчики событий
         addProductButton.setOnAction(e -> addProduct());
-        updateProductButton. setOnAction(e -> updateProduct());
+        updateProductButton.setOnAction(e -> updateProduct());
         cancelButton.setOnAction(e -> clearForm());
         editButton.setOnAction(e -> editProduct());
         deleteButton.setOnAction(e -> deleteProduct());
 
-        // Двойной клик для редактирования
         productsTable.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                editProduct();
-            }
+            if (event.getClickCount() == 2) editProduct();
         });
     }
 
@@ -77,14 +68,13 @@ public class ProductManagerController {
     }
 
     private void addProduct() {
-        if (! validateInput()) return;
-
+        if (!validateInput()) return;
         try {
-            String name = nameField.getText().trim();
-            double price = Double. parseDouble(priceField.getText().trim());
-            String unit = unitComboBox.getValue();
-
-            dbManager.addProduct(name, price, unit);
+            dbManager.addProduct(
+                    nameField.getText().trim(),
+                    Double.parseDouble(priceField.getText().trim()),
+                    unitComboBox.getValue()
+            );
             loadProducts();
             clearForm();
             showInfo("Товар успешно добавлен!");
@@ -97,34 +87,31 @@ public class ProductManagerController {
 
     private void editProduct() {
         selectedProduct = productsTable.getSelectionModel().getSelectedItem();
-
         if (selectedProduct == null) {
             showError("Выберите товар для редактирования");
             return;
         }
-
         nameField.setText(selectedProduct.getName());
-        priceField.setText(String.valueOf(selectedProduct. getPrice()));
+        priceField.setText(String.valueOf(selectedProduct.getPrice()));
         unitComboBox.setValue(selectedProduct.getUnit());
-
         addProductButton.setDisable(true);
         updateProductButton.setDisable(false);
     }
 
     private void updateProduct() {
         if (selectedProduct == null || !validateInput()) return;
-
         try {
-            String name = nameField.getText().trim();
-            double price = Double.parseDouble(priceField.getText().trim());
-            String unit = unitComboBox.getValue();
-
-            dbManager.updateProduct(selectedProduct.getId(), name, price, unit);
+            dbManager.updateProduct(
+                    selectedProduct.getId(),
+                    nameField.getText().trim(),
+                    Double.parseDouble(priceField.getText().trim()),
+                    unitComboBox.getValue()
+            );
             loadProducts();
             clearForm();
-            showInfo("Товар успешно обновлен!");
+            showInfo("Товар успешно обновлён!");
         } catch (SQLException e) {
-            showError("Ошибка обновления товара:  " + e.getMessage());
+            showError("Ошибка обновления товара: " + e.getMessage());
         } catch (NumberFormatException e) {
             showError("Неверный формат цены");
         }
@@ -132,23 +119,21 @@ public class ProductManagerController {
 
     private void deleteProduct() {
         Product product = productsTable.getSelectionModel().getSelectedItem();
-
         if (product == null) {
             showError("Выберите товар для удаления");
             return;
         }
-
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation. setTitle("Подтверждение");
+        confirmation.setTitle("Подтверждение");
         confirmation.setHeaderText("Удаление товара");
         confirmation.setContentText("Вы уверены, что хотите удалить товар \"" + product.getName() + "\"?");
 
-        if (confirmation.showAndWait().get() == ButtonType.OK) {
+        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
                 dbManager.deleteProduct(product.getId());
                 loadProducts();
                 clearForm();
-                showInfo("Товар успешно удален!");
+                showInfo("Товар успешно удалён!");
             } catch (SQLException e) {
                 showError("Ошибка удаления товара: " + e.getMessage());
             }
@@ -158,26 +143,27 @@ public class ProductManagerController {
     private void clearForm() {
         nameField.clear();
         priceField.clear();
-        unitComboBox. getSelectionModel().selectFirst();
+        unitComboBox.getSelectionModel().selectFirst();
         selectedProduct = null;
         addProductButton.setDisable(false);
-        updateProductButton. setDisable(true);
+        updateProductButton.setDisable(true);
         productsTable.getSelectionModel().clearSelection();
     }
 
     private boolean validateInput() {
-        if (nameField.getText().trim().isEmpty()) {
+        String name = nameField.getText().trim();
+        String priceText = priceField.getText().trim();
+
+        if (name.isEmpty()) {
             showError("Введите наименование товара");
             return false;
         }
-
-        if (priceField.getText().trim().isEmpty()) {
+        if (priceText.isEmpty()) {
             showError("Введите цену товара");
             return false;
         }
-
         try {
-            double price = Double.parseDouble(priceField.getText().trim());
+            double price = Double.parseDouble(priceText);
             if (price <= 0) {
                 showError("Цена должна быть больше нуля");
                 return false;
@@ -186,12 +172,10 @@ public class ProductManagerController {
             showError("Неверный формат цены");
             return false;
         }
-
         if (unitComboBox.getValue() == null || unitComboBox.getValue().isEmpty()) {
             showError("Выберите единицу измерения");
             return false;
         }
-
         return true;
     }
 
@@ -204,7 +188,7 @@ public class ProductManagerController {
     }
 
     private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType. INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Успех");
         alert.setHeaderText(null);
         alert.setContentText(message);

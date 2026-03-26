@@ -1,261 +1,249 @@
-package ru. fixbyte.view;
+package ru.fixbyte.view;
 
-import javafx.print.*;
-import javafx.scene.Node;
-import javafx.scene. layout. VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
-import javafx. scene.text.Font;
-import javafx.scene. text.FontWeight;
-import javafx.scene.image.Image;
-import javafx. scene.image.ImageView;
-import javafx.scene.shape.Line;
-import ru.fixbyte.model. ReceiptItem;
-import ru.fixbyte.model.CompanySettings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.print.PrinterJob;
+import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import ru.fixbyte.model.CompanySettings;
+import ru.fixbyte.model.ReceiptItem;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
-import java. time.format.DateTimeFormatter;
-import java.io. InputStream;
+import java.time.format.DateTimeFormatter;
 
 public class ReceiptPrinter {
 
+    private static final double RECEIPT_WIDTH = 520;
+    private static final int LOGO_SIZE = 80;
+
     public void print(ObservableList<ReceiptItem> items) {
         PrinterJob job = PrinterJob.createPrinterJob();
-
         if (job != null && job.showPrintDialog(null)) {
             Node receipt = createReceiptNode(items);
-
             boolean success = job.printPage(receipt);
             if (success) {
-                job. endJob();
+                job.endJob();
+            } else {
+                System.err.println("Ошибка печати чека");
             }
         }
     }
 
     private Node createReceiptNode(ObservableList<ReceiptItem> items) {
-        VBox receipt = new VBox(8);
-        receipt.setPadding(new Insets(30));
+        VBox receipt = new VBox(5);
+        receipt.setPadding(new Insets(15));
         receipt.setAlignment(Pos.TOP_CENTER);
         receipt.setStyle("-fx-background-color: white;");
-        receipt.setPrefWidth(600);
+        receipt.setPrefWidth(550);
 
-        // ============ ЛОГОТИП И НАЗВАНИЕ КОМПАНИИ ============
-        VBox headerBox = new VBox(10);
-        headerBox.setAlignment(Pos.CENTER);
+        receipt.getChildren().add(createHeader());
+        receipt.getChildren().add(createContactInfo());
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
+        receipt.getChildren().add(createReceiptTitle());
+        receipt.getChildren().add(createDateTime());
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
+        receipt.getChildren().add(createTableHeaders());
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
 
-        // Попытка загрузить логотип
-        try {
-            InputStream logoStream = getClass().getResourceAsStream(CompanySettings.getLogoPath());
-            if (logoStream != null) {
-                Image logo = new Image(logoStream);
-                ImageView logoView = new ImageView(logo);
-                logoView.setFitWidth(120);
-                logoView.setFitHeight(120);
-                logoView.setPreserveRatio(true);
-                headerBox.getChildren().add(logoView);
-            } else {
-                // Если логотипа нет - показываем рамку
-                Text logoPlaceholder = new Text("[МЕСТО ДЛЯ ЛОГОТИПА]");
-                logoPlaceholder.setFont(Font.font("Arial", FontWeight. BOLD, 12));
-                logoPlaceholder. setStyle("-fx-fill: #888888;");
-                headerBox.getChildren().add(logoPlaceholder);
-            }
-        } catch (Exception e) {
-            // Если ошибка загрузки - показываем заглушку
-            Text logoPlaceholder = new Text("[МЕСТО ДЛЯ ЛОГОТИПА]");
-            logoPlaceholder.setFont(Font.font("Arial", FontWeight.BOLD, 12));
-            logoPlaceholder.setStyle("-fx-fill: #888888;");
-            headerBox.getChildren().add(logoPlaceholder);
-        }
+        double total = addItemsToReceipt(receipt, items);
 
-        // Название компании
-        Text companyName = new Text(CompanySettings. getCompanyName());
-        companyName.setFont(Font. font("Arial", FontWeight. BOLD, 20));
-        headerBox.getChildren().add(companyName);
-
-        receipt.getChildren().add(headerBox);
-
-        // ============ АДРЕС И КОНТАКТЫ ============
-        VBox addressBox = new VBox(5);
-        addressBox.setAlignment(Pos.CENTER);
-
-        Text address = new Text(CompanySettings. getAddress());
-        address.setFont(Font.font("Arial", 11));
-
-        Text phone = new Text("Тел:  " + CompanySettings.getPhone());
-        phone.setFont(Font.font("Arial", 11));
-
-        Text inn = new Text("ИНН:  " + CompanySettings.getInn());
-        inn.setFont(Font.font("Arial", 11));
-
-        addressBox.getChildren().addAll(address, phone, inn);
-        receipt.getChildren().add(addressBox);
-
-        // Линия
-        receipt.getChildren().add(createLine(550));
-
-        // ============ ЗАГОЛОВОК ЧЕКА ============
-        Text header = new Text("ТОВАРНЫЙ ЧЕК");
-        header.setFont(Font.font("Arial", FontWeight.BOLD, 22));
-        receipt.getChildren().add(header);
-
-        // Дата и время
-        Text dateTime = new Text("Дата: " + LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("dd. MM.yyyy HH:mm:ss")));
-        dateTime.setFont(Font.font("Arial", 12));
-        receipt.getChildren().add(dateTime);
-
-        receipt.getChildren().add(createLine(550));
-
-        // ============ ЗАГОЛОВКИ СТОЛБЦОВ ============
-        HBox columnHeaders = new HBox();
-        columnHeaders.setSpacing(10);
-        columnHeaders. setPadding(new Insets(5, 0, 5, 0));
-
-        Text colName = new Text("Наименование");
-        colName.setFont(Font.font("Courier New", FontWeight.BOLD, 12));
-        colName.setWrappingWidth(250);
-
-        Text colPrice = new Text("Цена");
-        colPrice.setFont(Font.font("Courier New", FontWeight.BOLD, 12));
-        colPrice.setWrappingWidth(80);
-
-        Text colQty = new Text("Кол-во");
-        colQty.setFont(Font.font("Courier New", FontWeight. BOLD, 12));
-        colQty.setWrappingWidth(70);
-
-        Text colTotal = new Text("Сумма");
-        colTotal.setFont(Font.font("Courier New", FontWeight.BOLD, 12));
-        colTotal.setWrappingWidth(100);
-
-        columnHeaders. getChildren().addAll(colName, colPrice, colQty, colTotal);
-        receipt.getChildren().add(columnHeaders);
-
-        receipt.getChildren().add(createLine(550));
-
-        // ============ ТОВАРЫ ============
-        double total = 0;
-        for (ReceiptItem item : items) {
-            HBox itemRow = new HBox();
-            itemRow.setSpacing(10);
-            itemRow.setPadding(new Insets(3, 0, 3, 0));
-
-            Text itemName = new Text(item.getProduct().getName());
-            itemName.setFont(Font.font("Courier New", 11));
-            itemName.setWrappingWidth(250);
-
-            Text itemPrice = new Text(String.format("%.2f", item.getProduct().getPrice()));
-            itemPrice.setFont(Font.font("Courier New", 11));
-            itemPrice.setWrappingWidth(80);
-
-            Text itemQty = new Text(String.format("%.2f %s",
-                    item.getQuantity(), item.getProduct().getUnit()));
-            itemQty.setFont(Font.font("Courier New", 11));
-            itemQty.setWrappingWidth(70);
-
-            Text itemTotal = new Text(String.format("%.2f", item.getTotal()));
-            itemTotal.setFont(Font.font("Courier New", 11));
-            itemTotal.setWrappingWidth(100);
-
-            itemRow. getChildren().addAll(itemName, itemPrice, itemQty, itemTotal);
-            receipt.getChildren().add(itemRow);
-
-            total += item.getTotal();
-        }
-
-        // Линия перед итогом
-        receipt.getChildren().add(createLine(550));
-
-        // ============ ИТОГО ============
-        HBox totalBox = new HBox();
-        totalBox.setAlignment(Pos.CENTER_RIGHT);
-        totalBox.setPadding(new Insets(10, 20, 10, 0));
-
-        Text totalLabel = new Text("ИТОГО:  ");
-        totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-
-        Text totalValue = new Text(String.format("%.2f руб.", total));
-        totalValue.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-
-        totalBox. getChildren().addAll(totalLabel, totalValue);
-        receipt.getChildren().add(totalBox);
-
-        receipt.getChildren().add(createLine(550));
-
-        // ============ МЕСТО ДЛЯ ПОДПИСИ ============
-        VBox signatureBox = new VBox(15);
-        signatureBox.setPadding(new Insets(30, 0, 10, 0));
-
-        // Подпись продавца
-        HBox sellerSignature = new HBox();
-        sellerSignature.setSpacing(10);
-        sellerSignature.setAlignment(Pos.CENTER_LEFT);
-
-        Text sellerLabel = new Text("Продавец:");
-        sellerLabel.setFont(Font.font("Arial", 12));
-
-        Line sellerLine = new Line(0, 0, 200, 0);
-        sellerLine.setStroke(javafx.scene.paint.Color.BLACK);
-
-        Text sellerHint = new Text("(подпись)");
-        sellerHint.setFont(Font. font("Arial", 10));
-        sellerHint.setStyle("-fx-fill: #666666;");
-
-        HBox sellerLineBox = new HBox(10, sellerLine, sellerHint);
-        sellerLineBox.setAlignment(Pos.CENTER_LEFT);
-
-        sellerSignature.getChildren().addAll(sellerLabel, sellerLineBox);
-
-        // Подпись покупателя
-        HBox buyerSignature = new HBox();
-        buyerSignature.setSpacing(10);
-        buyerSignature.setAlignment(Pos.CENTER_LEFT);
-
-        Text buyerLabel = new Text("Покупатель:");
-        buyerLabel.setFont(Font. font("Arial", 12));
-
-        Line buyerLine = new Line(0, 0, 200, 0);
-        buyerLine.setStroke(javafx.scene.paint.Color.BLACK);
-
-        Text buyerHint = new Text("(подпись)");
-        buyerHint.setFont(Font.font("Arial", 10));
-        buyerHint. setStyle("-fx-fill: #666666;");
-
-        HBox buyerLineBox = new HBox(10, buyerLine, buyerHint);
-        buyerLineBox.setAlignment(Pos.CENTER_LEFT);
-
-        buyerSignature. getChildren().addAll(buyerLabel, buyerLineBox);
-
-        signatureBox.getChildren().addAll(sellerSignature, buyerSignature);
-        receipt.getChildren().add(signatureBox);
-
-        // ============ ФУТЕР ============
-        VBox footerBox = new VBox(5);
-        footerBox.setAlignment(Pos.CENTER);
-        footerBox.setPadding(new Insets(20, 0, 0, 0));
-
-        receipt.getChildren().add(createLine(550));
-
-        Text thanks = new Text("Спасибо за покупку!");
-        thanks.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
-        Text visitAgain = new Text("Будем рады видеть Вас снова!");
-        visitAgain.setFont(Font. font("Arial", 11));
-
-        footerBox.getChildren().addAll(thanks, visitAgain);
-        receipt.getChildren().add(footerBox);
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
+        receipt.getChildren().add(createTotalSection(total));
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
+        receipt.getChildren().add(createSignatureSection());
+        receipt.getChildren().add(createLine(RECEIPT_WIDTH));
+        receipt.getChildren().add(createFooter());
 
         return receipt;
     }
 
-    // Вспомогательный метод для создания линий
+    private VBox createHeader() {
+        VBox headerBox = new VBox(5);
+        headerBox.setAlignment(Pos.CENTER);
+
+        try {
+            InputStream logoStream = getClass().getResourceAsStream(CompanySettings.getLogoPath());
+            if (logoStream != null) {
+                ImageView logoView = new ImageView(new Image(logoStream));
+                logoView.setFitWidth(LOGO_SIZE);
+                logoView.setFitHeight(LOGO_SIZE);
+                logoView.setPreserveRatio(true);
+                headerBox.getChildren().add(logoView);
+            } else {
+                headerBox.getChildren().add(createLogoPlaceholder());
+            }
+        } catch (Exception e) {
+            headerBox.getChildren().add(createLogoPlaceholder());
+        }
+
+        Text companyName = new Text(CompanySettings.getCompanyName());
+        companyName.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        headerBox.getChildren().add(companyName);
+
+        return headerBox;
+    }
+
+    private Text createLogoPlaceholder() {
+        Text placeholder = new Text("[ЛОГОТИП]");
+        placeholder.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+        placeholder.setFill(Color.web("#888888"));
+        return placeholder;
+    }
+
+    private VBox createContactInfo() {
+        VBox contactBox = new VBox(2);
+        contactBox.setAlignment(Pos.CENTER);
+
+        Text address = new Text(CompanySettings.getAddress());
+        address.setFont(Font.font("Arial", 9));
+        contactBox.getChildren().add(address);
+
+        Text phone = new Text("Тел: " + CompanySettings.getPhone());
+        phone.setFont(Font.font("Arial", 9));
+        contactBox.getChildren().add(phone);
+
+        if (CompanySettings.isShowInn()) {
+            Text inn = new Text("ИНН: " + CompanySettings.getInn());
+            inn.setFont(Font.font("Arial", 9));
+            contactBox.getChildren().add(inn);
+        }
+
+        return contactBox;
+    }
+
+    private VBox createReceiptTitle() {
+        VBox titleBox = new VBox();
+        titleBox.setAlignment(Pos.CENTER);
+        Text title = new Text("ТОВАРНЫЙ ЧЕК");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        titleBox.getChildren().add(title);
+        return titleBox;
+    }
+
+    private VBox createDateTime() {
+        VBox dateBox = new VBox();
+        dateBox.setAlignment(Pos.CENTER);
+        String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+        Text dateTime = new Text("Дата: " + formattedDate);
+        dateTime.setFont(Font.font("Arial", 10));
+        dateBox.getChildren().add(dateTime);
+        return dateBox;
+    }
+
+    private HBox createTableHeaders() {
+        HBox headers = new HBox();
+        headers.setSpacing(5);
+        headers.setPadding(new Insets(3, 0, 3, 0));
+        headers.getChildren().addAll(
+                createTableHeaderText("Наименование", 240),
+                createTableHeaderText("Цена", 70),
+                createTableHeaderText("Кол-во", 70),
+                createTableHeaderText("Сумма", 90)
+        );
+        return headers;
+    }
+
+    private Text createTableHeaderText(String text, double width) {
+        Text headerText = new Text(text);
+        headerText.setFont(Font.font("Courier New", FontWeight.BOLD, 10));
+        headerText.setWrappingWidth(width);
+        return headerText;
+    }
+
+    private double addItemsToReceipt(VBox receipt, ObservableList<ReceiptItem> items) {
+        double total = 0;
+        for (ReceiptItem item : items) {
+            HBox itemRow = new HBox();
+            itemRow.setSpacing(5);
+            itemRow.setPadding(new Insets(2, 0, 2, 0));
+            itemRow.getChildren().addAll(
+                    createItemText(item.getProduct().getName(), 240),
+                    createItemText(String.format("%.0f", item.getProduct().getPrice()), 70),
+                    createItemText(String.format("%.2f %s", item.getQuantity(), item.getProduct().getUnit()), 70),
+                    createItemText(String.format("%.0f", item.getTotal()), 90)
+            );
+            receipt.getChildren().add(itemRow);
+            total += item.getTotal();
+        }
+        return total;
+    }
+
+    private Text createItemText(String text, double width) {
+        Text itemText = new Text(text);
+        itemText.setFont(Font.font("Courier New", 9));
+        itemText.setWrappingWidth(width);
+        return itemText;
+    }
+
+    private VBox createTotalSection(double total) {
+        VBox totalBox = new VBox();
+        totalBox.setAlignment(Pos.CENTER);
+        totalBox.setPadding(new Insets(5, 0, 5, 0));
+        Text totalText = new Text(String.format("ИТОГО: %.0f руб.", total));
+        totalText.setFont(Font.font("Arial", FontWeight.BOLD, 13));
+        totalBox.getChildren().add(totalText);
+        return totalBox;
+    }
+
+    private VBox createSignatureSection() {
+        VBox signatureBox = new VBox(10);
+        signatureBox.setPadding(new Insets(15, 0, 5, 0));
+        signatureBox.getChildren().add(createSignatureLine("Продавец:  "));
+        if (CompanySettings.isShowBuyerSignature()) {
+            signatureBox.getChildren().add(createSignatureLine("Покупатель:"));
+        }
+        return signatureBox;
+    }
+
+    private HBox createSignatureLine(String label) {
+        HBox signatureRow = new HBox();
+        signatureRow.setSpacing(10);
+        signatureRow.setAlignment(Pos.CENTER_LEFT);
+
+        Text labelText = new Text(label);
+        labelText.setFont(Font.font("Arial", 10));
+
+        Line line = new Line(0, 0, 180, 0);
+        line.setStroke(Color.BLACK);
+
+        Text hint = new Text("(подпись)");
+        hint.setFont(Font.font("Arial", 8));
+        hint.setFill(Color.web("#666666"));
+
+        signatureRow.getChildren().addAll(labelText, new HBox(5, line, hint));
+        return signatureRow;
+    }
+
+    private VBox createFooter() {
+        VBox footerBox = new VBox(3);
+        footerBox.setAlignment(Pos.CENTER);
+        footerBox.setPadding(new Insets(10, 0, 0, 0));
+
+        Text thanks = new Text("Спасибо за покупку!");
+        thanks.setFont(Font.font("Arial", FontWeight.BOLD, 11));
+
+        Text visitAgain = new Text("Будем рады видеть Вас снова!");
+        visitAgain.setFont(Font.font("Arial", 9));
+
+        footerBox.getChildren().addAll(thanks, visitAgain);
+
+        return footerBox;
+    }
+
     private Line createLine(double width) {
         Line line = new Line(0, 0, width, 0);
-        line.setStroke(javafx.scene.paint.Color.BLACK);
-        line.setStrokeWidth(1);
+        line.setStroke(Color.BLACK);
+        line.setStrokeWidth(0.5);
         return line;
     }
 }
